@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Portal - Admin Login</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Portal - Bootstrap 5 Admin Dashboard Template For Developers"
+    />
+    <meta name="author" content="Xiaoying Riley at 3rd Wave Media" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <script defer src="assets/plugins/fontawesome/js/all.min.js"></script>
+    <link id="theme-style" rel="stylesheet" href="assets/css/portal.css" />
+  </head>
+
+  <body class="app app-login p-0">
+    <div class="row g-0 app-auth-wrapper">
+      <div class="col-12 col-md-7 col-lg-6 auth-main-col text-center p-5">
+        <div class="d-flex flex-column align-content-end">
+          <div class="app-auth-body mx-auto">
+            <div class="app-auth-branding mb-4">
+              <a class="app-logo" href="index.html">
+                <img
+                  class="logo-icon me-2"
+                  src="assets/images/app-logo.svg"
+                  alt="logo"
+                />
+              </a>
+            </div>
+            <h2 class="auth-heading text-center mb-5">Log in to Portal</h2>
+
+            <div class="auth-form-container text-start">
+              <form id="login-form" class="auth-form login-form">
+                <div class="email mb-3">
+                  <input
+                    id="signin-user-id"
+                    name="signin-user-id"
+                    type="text"
+                    class="form-control signin-email"
+                    placeholder="Enter your User ID"
+                    required
+                    autocomplete="username"
+                  />
+                  <div class="invalid-feedback" id="userId-error"></div>
+                </div>
+
+                <div class="password mb-3">
+                  <input
+                    id="signin-password"
+                    name="signin-password"
+                    type="password"
+                    class="form-control signin-password"
+                    placeholder="Enter your Password"
+                    required
+                    autocomplete="current-password"
+                  />
+                  <div class="invalid-feedback" id="password-error"></div>
+                </div>
+
+                <div class="text-center">
+                  <button
+                    type="submit"
+                    class="btn app-btn-primary w-100 theme-btn mx-auto"
+                    id="login-btn"
+                  >
+                    <span id="login-text">Log In</span>
+                    <span
+                      id="login-spinner"
+                      class="spinner-border spinner-border-sm d-none ms-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                  </button>
+                </div>
+              </form>
+
+              <!-- Connection Status Indicator -->
+              <div class="text-center mt-3">
+                <small id="connection-status" class="text-muted"></small>
+              </div>
+            </div>
+          </div>
+
+          <footer class="app-auth-footer">
+            <div class="container text-center py-3">
+              <small class="copyright">
+                Designed with <span class="sr-only">love</span>
+                <i class="fas fa-heart" style="color: #fb866a"></i> by
+                <a
+                  class="app-link"
+                  href="http://themes.3rdwavemedia.com"
+                  target="_blank"
+                >
+                  Xiaoying Riley
+                </a>
+                for developers
+              </small>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-5 col-lg-6 h-100 auth-background-col">
+        <div class="auth-background-holder"></div>
+        <div class="auth-background-mask"></div>
+        <div class="auth-background-overlay p-3 p-lg-5">
+          <div class="d-flex flex-column align-content-end h-100">
+            <div class="h-100"></div>
+            <div class="overlay-content p-3 p-lg-4 rounded">
+              <h5 class="mb-3 overlay-title">Explore Portal Admin Template</h5>
+              <div>
+                Portal is a free Bootstrap 5 admin dashboard template. You can
+                download and view the template license
+                <a
+                  href="https://themes.3rdwavemedia.com/bootstrap-templates/admin-dashboard/portal-free-bootstrap-admin-dashboard-template-for-developers/"
+                  target="_blank"
+                >
+                  here </a
+                >.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/js/sessionManager.js"></script>
+
+    <script>
+      // Session Management Functions
+      function createSession(userId) {
+        const sessionData = {
+          userId: userId,
+          loginTime: new Date().getTime(),
+          isAuthenticated: true,
+          sessionId: generateSessionId(),
+        };
+        localStorage.setItem("userSession", JSON.stringify(sessionData));
+      }
+
+      function generateSessionId() {
+        return (
+          "session_" +
+          Math.random().toString(36).substr(2, 9) +
+          "_" +
+          Date.now()
+        );
+      }
+
+      function checkExistingSession() {
+        const session = localStorage.getItem("userSession");
+        if (session) {
+          try {
+            const sessionData = JSON.parse(session);
+            if (sessionData.isAuthenticated) {
+              // Check if session is still valid (24 hours)
+              const currentTime = new Date().getTime();
+              const sessionAge = currentTime - sessionData.loginTime;
+              const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+              if (sessionAge <= maxAge) {
+                window.location.href = "dashboard.html";
+                return;
+              } else {
+                // Session expired, clear it
+                localStorage.removeItem("userSession");
+              }
+            }
+          } catch (error) {
+            console.error("Error parsing session data:", error);
+            localStorage.removeItem("userSession");
+          }
+        }
+      }
+
+      // Login Form Handler
+      document.addEventListener("DOMContentLoaded", function () {
+        // Check if user is already logged in
+        checkExistingSession();
+
+        const loginForm = document.getElementById("login-form");
+        const loginBtn = document.getElementById("login-btn");
+        const loginText = document.getElementById("login-text");
+        const loginSpinner = document.getElementById("login-spinner");
+
+        loginForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          // Show loading state
+          loginText.textContent = "Logging in...";
+          loginSpinner.classList.remove("d-none");
+          loginBtn.disabled = true;
+
+          const userId = document.getElementById("signin-user-id").value.trim();
+          const password = document
+            .getElementById("signin-password")
+            .value.trim();
+
+          // Clear previous errors
+          document.getElementById("userId-error").textContent = "";
+          document.getElementById("password-error").textContent = "";
+          document.querySelectorAll(".form-control").forEach((input) => {
+            input.classList.remove("is-invalid");
+          });
+
+          // Simulate network delay
+          setTimeout(() => {
+            if (userId === "admin" && password === "admin@123456") {
+              // Create session
+              createSession(userId);
+
+              // Show success message
+              Swal.fire({
+                icon: "success",
+                title: "Login Successful",
+                text: "Welcome to Portal Admin Dashboard!",
+                timer: 1500,
+                showConfirmButton: false,
+              }).then(() => {
+                window.location.href = "dashboard.html";
+              });
+            } else {
+              // Reset button state
+              loginText.textContent = "Log In";
+              loginSpinner.classList.add("d-none");
+              loginBtn.disabled = false;
+
+              // Show validation errors
+              if (!userId) {
+                document
+                  .getElementById("signin-user-id")
+                  .classList.add("is-invalid");
+                document.getElementById("userId-error").textContent =
+                  "User ID is required";
+              }
+              if (!password) {
+                document
+                  .getElementById("signin-password")
+                  .classList.add("is-invalid");
+                document.getElementById("password-error").textContent =
+                  "Password is required";
+              }
+              if (userId && password) {
+                document
+                  .getElementById("signin-user-id")
+                  .classList.add("is-invalid");
+                document
+                  .getElementById("signin-password")
+                  .classList.add("is-invalid");
+                document.getElementById("password-error").textContent =
+                  "Invalid credentials";
+              }
+
+              Swal.fire({
+                icon: "error",
+                title: "Login Failed",
+                text: "Invalid User ID or Password. Please try again.",
+                confirmButtonText: "OK",
+              });
+            }
+          }, 1000);
+        });
+
+        // Clear error states on input
+        document.querySelectorAll(".form-control").forEach((input) => {
+          input.addEventListener("input", function () {
+            this.classList.remove("is-invalid");
+            const errorDiv = this.parentNode.querySelector(".invalid-feedback");
+            if (errorDiv) {
+              errorDiv.textContent = "";
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
