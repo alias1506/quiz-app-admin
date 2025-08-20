@@ -332,7 +332,7 @@
               return;
             }
 
-            const res = await fetch("http://localhost:5000/api/users", {
+            const res = await fetch("/api/users", {
               headers: {
                 "Content-Type": "application/json",
                 // Add session ID to headers if needed for backend validation
@@ -513,7 +513,7 @@
             try {
               sessionManager.updateLastActivity();
 
-              const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+              const res = await fetch(`/api/users/${id}`, {
                 method: "DELETE",
                 headers: {
                   "Content-Type": "application/json",

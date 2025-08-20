@@ -903,7 +903,7 @@
         async function getQuestionCountForSet(setId) {
           try {
             const response = await sessionFetch(
-              `http://localhost:5000/api/questions/by-set/${encodeURIComponent(
+              `/api/questions/by-set/${encodeURIComponent(
                 setId
               )}`,
               { method: "GET" }
@@ -978,7 +978,7 @@
         async function activateSet(setId) {
           try {
             const response = await sessionFetch(
-              `http://localhost:5000/api/sets/${encodeURIComponent(
+              `/api/sets/${encodeURIComponent(
                 setId
               )}/activate`,
               { method: "PUT" }
@@ -1012,7 +1012,7 @@
         async function deactivateAllSets() {
           try {
             const response = await sessionFetch(
-              "http://localhost:5000/api/sets/deactivate",
+              "/api/sets/deactivate",
               {
                 method: "PUT",
               }
@@ -1270,7 +1270,7 @@
         // UPDATED: loadSets restores Show Questions select from session
         async function loadSets() {
           try {
-            const res = await sessionFetch("http://localhost:5000/api/sets");
+            const res = await sessionFetch("/api/sets");
             if (!res.ok) throw new Error("Failed to fetch sets");
             let sets = await res.json();
             sets = sets.reverse();
@@ -1390,7 +1390,7 @@
           }
           try {
             const res = await sessionFetch(
-              "http://localhost:5000/api/questions"
+              "/api/questions"
             );
             if (!res.ok) throw new Error("Failed to fetch questions");
             const questions = await res.json();
