@@ -56,25 +56,28 @@
         }
       }
     </style>
-    <script src="assets/js/sessionManager.js"></script>
+    <script defer src="assets/js/sessionManager.js"></script>
     <script>
-      (function () {
-        // Check session using SessionManager
-        const sessionCheck = sessionManager.checkSession();
+      document.addEventListener("DOMContentLoaded", (event) => {
+      // Your code to show the modal goes here
+        (function () {
+          // Check session using SessionManager
+          const sessionCheck = sessionManager.checkSession();
 
-        if (!sessionCheck.valid) {
-          console.log("Session invalid:", sessionCheck.reason);
-          sessionManager.redirectToLogin();
-          return;
-        }
+          if (!sessionCheck.valid) {
+            console.log("Session invalid:", sessionCheck.reason);
+            sessionManager.redirectToLogin();
+            return;
+          }
 
-        // Optional: Log session info for debugging
-        const userInfo = sessionManager.getUserInfo();
-        if (userInfo) {
-          console.log("User authenticated:", userInfo.userId);
-          console.log("Session ID:", userInfo.sessionId);
-        }
-      })();
+          // Optional: Log session info for debugging
+          const userInfo = sessionManager.getUserInfo();
+          if (userInfo) {
+            console.log("User authenticated:", userInfo.userId);
+            console.log("Session ID:", userInfo.sessionId);
+          }
+        })();
+      });
     </script>
   </head>
 
