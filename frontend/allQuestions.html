@@ -903,9 +903,7 @@
         async function getQuestionCountForSet(setId) {
           try {
             const response = await sessionFetch(
-              `/api/questions/by-set/${encodeURIComponent(
-                setId
-              )}`,
+              `/api/questions/by-set/${encodeURIComponent(setId)}`,
               { method: "GET" }
             );
             if (!response.ok) {
@@ -978,9 +976,7 @@
         async function activateSet(setId) {
           try {
             const response = await sessionFetch(
-              `/api/sets/${encodeURIComponent(
-                setId
-              )}/activate`,
+              `/api/sets/${encodeURIComponent(setId)}/activate`,
               { method: "PUT" }
             );
             if (!response.ok) throw new Error("Failed to activate set");
@@ -1011,12 +1007,9 @@
 
         async function deactivateAllSets() {
           try {
-            const response = await sessionFetch(
-              "/api/sets/deactivate",
-              {
-                method: "PUT",
-              }
-            );
+            const response = await sessionFetch("/api/sets/deactivate", {
+              method: "PUT",
+            });
             if (!response.ok) throw new Error("Failed to deactivate sets");
             return true;
           } catch (error) {
@@ -1267,6 +1260,137 @@
           });
         }
 
+        // ==== Edit Question Function ====
+        async function editQuestion(questionId) {
+          try {
+            const question = allQuestions.find((q) => q._id === questionId);
+            if (!question) {
+              Swal.fire("Error", "Question not found", "error");
+              return;
+            }
+
+            editQuestionIdInput.value = question._id;
+            editQuestionTextInput.value = question.question;
+            editOptionsInput.value = Array.isArray(question.options)
+              ? question.options.join(", ")
+              : "";
+            editCorrectAnswerInput.value = question.correctAnswer;
+
+            // Set the select value using set ID
+            editQuestionSetSelect.value = question.set ? question.set._id : "";
+
+            const modal = new bootstrap.Modal(editQuestionModal);
+            modal.show();
+          } catch (err) {
+            console.error("Error loading question for edit:", err);
+            Swal.fire("Error", "Failed to load question data", "error");
+          }
+        }
+        
+        
+        // ==== Delete Question ====
+        async function deleteQuestion(questionId, questionText) {
+          const result = await Swal.fire({
+            title: "Are you sure?",
+            text: `Do you want to delete this question: "${questionText.substring(
+              0,
+              50
+            )}..."? This action cannot be undone!`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!",
+          });
+
+          if (result.isConfirmed) {
+            try {
+              const res = await fetch(
+                `/api/questions/${questionId}`,
+                {
+                  method: "DELETE",
+                }
+              );
+
+              if (!res.ok) {
+                const err = await res.json();
+                Swal.fire(
+                  "Error",
+                  err.message || "Failed to delete question",
+                  "error"
+                );
+                return;
+              }
+
+              Swal.fire({
+                icon: "success",
+                title: "Deleted!",
+                text: "Question deleted successfully.",
+                showConfirmButton: false,
+                timer: 1500,
+              });
+
+              await loadQuestions();
+            } catch (err) {
+              console.error("Error deleting question:", err);
+              Swal.fire(
+                "Error",
+                "Server error while deleting question",
+                "error"
+              );
+            }
+          }
+        }
+
+        // ==== Delete Set ====
+        async function deleteSet(setId, setName) {
+          const result = await Swal.fire({
+            title: "Are you sure?",
+            text: `Do you want to delete "${setName}"? This action cannot be undone!`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!",
+          });
+
+          if (result.isConfirmed) {
+            try {
+              const res = await fetch(
+                `/api/sets/${setId}`,
+                {
+                  method: "DELETE",
+                }
+              );
+
+              if (!res.ok) {
+                const err = await res.json();
+                Swal.fire(
+                  "Error",
+                  err.message || "Failed to delete set",
+                  "error"
+                );
+                return;
+              }
+
+              Swal.fire({
+                icon: "success",
+                title: "Deleted!",
+                text: "Set deleted successfully.",
+                showConfirmButton: false,
+                timer: 1500,
+              });
+
+              await loadSets();
+              await loadQuestions();
+            } catch (err) {
+              console.error("Error deleting set:", err);
+              Swal.fire("Error", "Server error while deleting set", "error");
+            }
+          }
+        }
+
+        
         // UPDATED: loadSets restores Show Questions select from session
         async function loadSets() {
           try {
@@ -1389,9 +1513,7 @@
             return;
           }
           try {
-            const res = await sessionFetch(
-              "/api/questions"
-            );
+            const res = await sessionFetch("/api/questions");
             if (!res.ok) throw new Error("Failed to fetch questions");
             const questions = await res.json();
             questions.sort(
@@ -1418,7 +1540,273 @@
           }
         }
 
-        // ... (the rest of your CRUD and UI logic does not change) ...
+        // ==== Update Question Handler ====
+        if (updateQuestionBtn) {
+          updateQuestionBtn.addEventListener("click", async () => {
+            const id = editQuestionIdInput.value;
+            const questionText = editQuestionTextInput.value.trim();
+            const optionsRaw = editOptionsInput.value.trim();
+            const correctAnswer = editCorrectAnswerInput.value.trim();
+            const setId = editQuestionSetSelect.value; // Use set ID
+
+            if (!questionText || !optionsRaw || !correctAnswer || !setId) {
+              Swal.fire(
+                "Error",
+                "All fields are required, including set.",
+                "error"
+              );
+              return;
+            }
+
+            const options = optionsRaw
+              .split(",")
+              .map((opt) => opt.trim())
+              .filter((opt) => opt !== "");
+
+            if (options.length < 2) {
+              Swal.fire("Error", "At least two options are required", "error");
+              return;
+            }
+
+            if (!options.includes(correctAnswer)) {
+              Swal.fire(
+                "Error",
+                "Correct answer must be one of the options",
+                "error"
+              );
+              return;
+            }
+
+            const payload = {
+              question: questionText,
+              options,
+              correctAnswer,
+              set: setId, // Send set ID
+            };
+
+            try {
+              const res = await fetch(
+                `/api/questions/${id}`,
+                {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                }
+              );
+
+              const data = await res.json();
+              if (!res.ok) {
+                Swal.fire(
+                  "Error",
+                  data.message || "Failed to update question",
+                  "error"
+                );
+                return;
+              }
+
+              Swal.fire({
+                icon: "success",
+                title: "Updated!",
+                text: "Question updated successfully",
+                showConfirmButton: false,
+                timer: 1500,
+              });
+
+              bootstrap.Modal.getInstance(editQuestionModal).hide();
+              await loadQuestions();
+            } catch (err) {
+              console.error("Error updating question:", err);
+              Swal.fire(
+                "Error",
+                "Server error while updating question",
+                "error"
+              );
+            }
+          });
+        }
+
+        // ==== Update Set ====
+        if (updateSetBtn) {
+          updateSetBtn.addEventListener("click", async () => {
+            const id = editSetIdInput.value;
+            const updatedName = editSetNameInput.value.trim();
+            if (!updatedName) {
+              Swal.fire("Error", "Set name is required", "error");
+              return;
+            }
+
+            try {
+              const res = await fetch(`/api/sets/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: updatedName }),
+              });
+
+              if (!res.ok) {
+                const err = await res.json();
+                Swal.fire(
+                  "Error",
+                  err.message || "Failed to update set",
+                  "error"
+                );
+                return;
+              }
+
+              Swal.fire({
+                icon: "success",
+                title: "Updated!",
+                text: "Set updated successfully.",
+                showConfirmButton: false,
+                timer: 1000,
+              });
+
+              bootstrap.Modal.getInstance(editSetModal).hide();
+              await loadSets();
+              await loadQuestions();
+            } catch (err) {
+              console.error("Error updating set:", err);
+              Swal.fire("Error", "Server error while updating set", "error");
+            }
+          });
+        }
+
+        // ==== Save Set ====
+        if (saveSetBtn) {
+          saveSetBtn.addEventListener("click", async () => {
+            const setName = newSetNameInput.value.trim();
+            if (!setName) {
+              Swal.fire("Error", "Set name is required", "error");
+              return;
+            }
+
+            try {
+              const res = await fetch("/api/sets", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: setName }),
+              });
+
+              if (!res.ok) {
+                const err = await res.json();
+                Swal.fire(
+                  "Error",
+                  err.message || "Failed to save set",
+                  "error"
+                );
+                return;
+              }
+
+              Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "Set saved successfully!",
+                showConfirmButton: false,
+                timer: 1000,
+              });
+
+              newSetNameInput.value = "";
+              const modal = bootstrap.Modal.getInstance(
+                document.getElementById("AddSetModal")
+              );
+              if (modal) modal.hide();
+
+              await loadSets();
+              await loadQuestions();
+            } catch (err) {
+              console.error("Error saving set:", err);
+              Swal.fire("Error", "Server error while saving set", "error");
+            }
+          });
+        }
+
+        // ==== Remove blur on edit modal close ====
+        if (editSetModal) {
+          editSetModal.addEventListener("hidden.bs.modal", () => {
+            removeBlurFromShowSetsModal();
+          });
+        }
+
+        // ==== Submit Question ====
+        if (submitQuestionBtn) {
+          submitQuestionBtn.addEventListener("click", async () => {
+            const questionText = document
+              .getElementById("question")
+              .value.trim();
+            const optionsRaw = document.getElementById("options").value.trim();
+            const correctAnswer = document
+              .getElementById("correctAnswer")
+              .value.trim();
+            const setId = addQuestionSetSelect.value; // Use set ID
+
+            if (!questionText || !optionsRaw || !correctAnswer || !setId) {
+              Swal.fire(
+                "Error",
+                "All fields are required, including set.",
+                "error"
+              );
+              return;
+            }
+
+            const options = optionsRaw
+              .split(",")
+              .map((opt) => opt.trim())
+              .filter((opt) => opt !== "");
+
+            if (options.length < 2) {
+              Swal.fire("Error", "At least two options are required", "error");
+              return;
+            }
+
+            if (!options.includes(correctAnswer)) {
+              Swal.fire(
+                "Error",
+                "Correct answer must be one of the options",
+                "error"
+              );
+              return;
+            }
+
+            const payload = {
+              question: questionText,
+              options,
+              correctAnswer,
+              set: setId, // Send set ID
+            };
+
+            try {
+              const res = await fetch("/api/questions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+
+              const data = await res.json();
+              if (!res.ok) {
+                Swal.fire(
+                  "Error",
+                  data.message || "Failed to save question",
+                  "error"
+                );
+                return;
+              }
+
+              Swal.fire({
+                icon: "success",
+                title: "Saved!",
+                text: "Question added successfully",
+                showConfirmButton: false,
+                timer: 1500,
+              });
+
+              addQuestionForm.reset();
+              bootstrap.Modal.getInstance(addQuestionModal).hide();
+              await loadQuestions();
+            } catch (err) {
+              console.error("Error saving question:", err);
+              Swal.fire("Error", "Server error while saving question", "error");
+            }
+          });
+        }
 
         (async () => {
           await loadSets();
