@@ -1272,7 +1272,7 @@
             editQuestionIdInput.value = question._id;
             editQuestionTextInput.value = question.question;
             editOptionsInput.value = Array.isArray(question.options)
-              ? question.options.join(", ")
+              ? question.options.join(" || ")
               : "";
             editCorrectAnswerInput.value = question.correctAnswer;
 
@@ -1286,8 +1286,7 @@
             Swal.fire("Error", "Failed to load question data", "error");
           }
         }
-        
-        
+
         // ==== Delete Question ====
         async function deleteQuestion(questionId, questionText) {
           const result = await Swal.fire({
@@ -1305,12 +1304,9 @@
 
           if (result.isConfirmed) {
             try {
-              const res = await fetch(
-                `/api/questions/${questionId}`,
-                {
-                  method: "DELETE",
-                }
-              );
+              const res = await fetch(`/api/questions/${questionId}`, {
+                method: "DELETE",
+              });
 
               if (!res.ok) {
                 const err = await res.json();
@@ -1356,12 +1352,9 @@
 
           if (result.isConfirmed) {
             try {
-              const res = await fetch(
-                `/api/sets/${setId}`,
-                {
-                  method: "DELETE",
-                }
-              );
+              const res = await fetch(`/api/sets/${setId}`, {
+                method: "DELETE",
+              });
 
               if (!res.ok) {
                 const err = await res.json();
@@ -1390,7 +1383,6 @@
           }
         }
 
-        
         // UPDATED: loadSets restores Show Questions select from session
         async function loadSets() {
           try {
@@ -1549,6 +1541,7 @@
             const correctAnswer = editCorrectAnswerInput.value.trim();
             const setId = editQuestionSetSelect.value; // Use set ID
 
+            // Basic presence validation
             if (!questionText || !optionsRaw || !correctAnswer || !setId) {
               Swal.fire(
                 "Error",
@@ -1558,16 +1551,32 @@
               return;
             }
 
-            const options = optionsRaw
-              .split(",")
+            // Parse options per new rules:
+            // - If '||' exists anywhere, split strictly by '||' (commas inside are preserved).
+            // - If '||' does not exist, split by comma.
+            const splitBy = optionsRaw.includes("||") ? "||" : ",";
+            const parsed = optionsRaw
+              .split(splitBy)
               .map((opt) => opt.trim())
               .filter((opt) => opt !== "");
 
+            // Remove duplicates while preserving order
+            const seen = new Set();
+            const options = [];
+            for (const opt of parsed) {
+              if (!seen.has(opt)) {
+                seen.add(opt);
+                options.push(opt);
+              }
+            }
+
+            // Options validation
             if (options.length < 2) {
               Swal.fire("Error", "At least two options are required", "error");
               return;
             }
 
+            // Correct answer must match exactly one of the parsed options
             if (!options.includes(correctAnswer)) {
               Swal.fire(
                 "Error",
@@ -1585,16 +1594,13 @@
             };
 
             try {
-              const res = await fetch(
-                `/api/questions/${id}`,
-                {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
-                }
-              );
+              const res = await fetch(`/api/questions/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
 
-              const data = await res.json();
+              const data = await res.json().catch(() => ({}));
               if (!res.ok) {
                 Swal.fire(
                   "Error",
@@ -1726,7 +1732,88 @@
           });
         }
 
-        // ==== Submit Question ====
+        // // ==== Submit Question ====
+        // if (submitQuestionBtn) {
+        //   submitQuestionBtn.addEventListener("click", async () => {
+        //     const questionText = document
+        //       .getElementById("question")
+        //       .value.trim();
+        //     const optionsRaw = document.getElementById("options").value.trim();
+        //     const correctAnswer = document
+        //       .getElementById("correctAnswer")
+        //       .value.trim();
+        //     const setId = addQuestionSetSelect.value; // Use set ID
+
+        //     if (!questionText || !optionsRaw || !correctAnswer || !setId) {
+        //       Swal.fire(
+        //         "Error",
+        //         "All fields are required, including set.",
+        //         "error"
+        //       );
+        //       return;
+        //     }
+
+        //     const options = optionsRaw
+        //       .split(",")
+        //       .map((opt) => opt.trim())
+        //       .filter((opt) => opt !== "");
+
+        //     if (options.length < 2) {
+        //       Swal.fire("Error", "At least two options are required", "error");
+        //       return;
+        //     }
+
+        //     if (!options.includes(correctAnswer)) {
+        //       Swal.fire(
+        //         "Error",
+        //         "Correct answer must be one of the options",
+        //         "error"
+        //       );
+        //       return;
+        //     }
+
+        //     const payload = {
+        //       question: questionText,
+        //       options,
+        //       correctAnswer,
+        //       set: setId, // Send set ID
+        //     };
+
+        //     try {
+        //       const res = await fetch("/api/questions", {
+        //         method: "POST",
+        //         headers: { "Content-Type": "application/json" },
+        //         body: JSON.stringify(payload),
+        //       });
+
+        //       const data = await res.json();
+        //       if (!res.ok) {
+        //         Swal.fire(
+        //           "Error",
+        //           data.message || "Failed to save question",
+        //           "error"
+        //         );
+        //         return;
+        //       }
+
+        //       Swal.fire({
+        //         icon: "success",
+        //         title: "Saved!",
+        //         text: "Question added successfully",
+        //         showConfirmButton: false,
+        //         timer: 1500,
+        //       });
+
+        //       addQuestionForm.reset();
+        //       bootstrap.Modal.getInstance(addQuestionModal).hide();
+        //       await loadQuestions();
+        //     } catch (err) {
+        //       console.error("Error saving question:", err);
+        //       Swal.fire("Error", "Server error while saving question", "error");
+        //     }
+        //   });
+        // }
+
         if (submitQuestionBtn) {
           submitQuestionBtn.addEventListener("click", async () => {
             const questionText = document
@@ -1738,6 +1825,7 @@
               .value.trim();
             const setId = addQuestionSetSelect.value; // Use set ID
 
+            // Basic presence validation
             if (!questionText || !optionsRaw || !correctAnswer || !setId) {
               Swal.fire(
                 "Error",
@@ -1747,17 +1835,35 @@
               return;
             }
 
-            const options = optionsRaw
-              .split(",")
+            // Parse options per new rules:
+            // - If '||' exists anywhere, split strictly by '||' (commas inside are preserved).
+            // - If '||' does not exist, split by comma.
+            const options = (
+              optionsRaw.includes("||")
+                ? optionsRaw.split("||")
+                : optionsRaw.split(",")
+            )
               .map((opt) => opt.trim())
               .filter((opt) => opt !== "");
 
-            if (options.length < 2) {
+            // Remove duplicates while preserving order
+            const seen = new Set();
+            const uniqueOptions = [];
+            for (const opt of options) {
+              if (!seen.has(opt)) {
+                seen.add(opt);
+                uniqueOptions.push(opt);
+              }
+            }
+
+            // Options validation
+            if (uniqueOptions.length < 2) {
               Swal.fire("Error", "At least two options are required", "error");
               return;
             }
 
-            if (!options.includes(correctAnswer)) {
+            // Correct answer must match exactly one of the parsed options
+            if (!uniqueOptions.includes(correctAnswer)) {
               Swal.fire(
                 "Error",
                 "Correct answer must be one of the options",
@@ -1768,7 +1874,7 @@
 
             const payload = {
               question: questionText,
-              options,
+              options: uniqueOptions,
               correctAnswer,
               set: setId, // Send set ID
             };
@@ -1780,7 +1886,7 @@
                 body: JSON.stringify(payload),
               });
 
-              const data = await res.json();
+              const data = await res.json().catch(() => ({}));
               if (!res.ok) {
                 Swal.fire(
                   "Error",
