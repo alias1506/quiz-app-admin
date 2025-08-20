@@ -2,58 +2,46 @@
 class SessionManager {
   constructor() {
     this.sessionKey = "userSession";
-    this.maxSessionAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    this.maxSessionAge = 24 * 60 * 60 * 1000; // 24 hours in ms
   }
 
   // Create a new session
   createSession(userId) {
     const sessionData = {
       userId: userId,
-      loginTime: new Date().getTime(),
+      loginTime: Date.now(),
       isAuthenticated: true,
       sessionId: this.generateSessionId(),
-      lastActivity: new Date().getTime(),
+      lastActivity: Date.now(),
     };
-    localStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
+    sessionStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
     return sessionData;
   }
 
   // Generate unique session ID
   generateSessionId() {
-    return (
-      "session_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now()
-    );
+    return `session_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
   }
 
   // Check if session exists and is valid
   checkSession() {
-    const session = localStorage.getItem(this.sessionKey);
-
-    if (!session) {
-      return { valid: false, reason: "No session found" };
-    }
+    const session = sessionStorage.getItem(this.sessionKey);
+    if (!session) return { valid: false, reason: "No session found" };
 
     try {
       const sessionData = JSON.parse(session);
-
-      // Check if session is authenticated
-      if (!sessionData.isAuthenticated) {
+      if (!sessionData.isAuthenticated)
         return { valid: false, reason: "Session not authenticated" };
-      }
 
-      // Check if session has expired
-      const currentTime = new Date().getTime();
-      const sessionAge = currentTime - sessionData.loginTime;
-
-      if (sessionAge > this.maxSessionAge) {
+      const currentTime = Date.now();
+      if (currentTime - sessionData.loginTime > this.maxSessionAge) {
         this.clearSession();
         return { valid: false, reason: "Session expired" };
       }
 
-      // Update last activity
+      // Update last activity each check
       this.updateLastActivity();
-
-      return { valid: true, sessionData: sessionData };
+      return { valid: true, sessionData };
     } catch (error) {
       console.error("Error parsing session data:", error);
       this.clearSession();
@@ -63,12 +51,12 @@ class SessionManager {
 
   // Update last activity timestamp
   updateLastActivity() {
-    const session = localStorage.getItem(this.sessionKey);
+    const session = sessionStorage.getItem(this.sessionKey);
     if (session) {
       try {
         const sessionData = JSON.parse(session);
-        sessionData.lastActivity = new Date().getTime();
-        localStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
+        sessionData.lastActivity = Date.now();
+        sessionStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
       } catch (error) {
         console.error("Error updating last activity:", error);
       }
@@ -77,7 +65,7 @@ class SessionManager {
 
   // Get current session data
   getSession() {
-    const session = localStorage.getItem(this.sessionKey);
+    const session = sessionStorage.getItem(this.sessionKey);
     if (session) {
       try {
         return JSON.parse(session);
@@ -91,7 +79,7 @@ class SessionManager {
 
   // Clear session
   clearSession() {
-    localStorage.removeItem(this.sessionKey);
+    sessionStorage.removeItem(this.sessionKey);
   }
 
   // Logout user
@@ -117,10 +105,7 @@ class SessionManager {
 
   // Initialize session checking for protected pages
   initProtectedPage() {
-    // Skip session check if we're on the login page
-    if (this.isLoginPage()) {
-      return;
-    }
+    if (this.isLoginPage()) return;
 
     const sessionCheck = this.checkSession();
     if (!sessionCheck.valid) {
@@ -156,9 +141,7 @@ class SessionManager {
 
   // Immediate session check (runs before DOM loads)
   immediateCheck() {
-    if (this.isLoginPage()) {
-      return;
-    }
+    if (this.isLoginPage()) return;
 
     const sessionCheck = this.checkSession();
     if (!sessionCheck.valid) {
@@ -174,7 +157,6 @@ class SessionManager {
 const sessionManager = new SessionManager();
 
 // IMMEDIATE SESSION CHECK - Runs before DOM loads
-// This prevents content from loading if user is not authenticated
 (function () {
   sessionManager.immediateCheck();
 })();

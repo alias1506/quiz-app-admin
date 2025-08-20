@@ -132,64 +132,53 @@
     <script src="assets/js/sessionManager.js"></script>
 
     <script>
-      // Session Management Functions
-      function createSession(userId) {
-        const sessionData = {
-          userId: userId,
-          loginTime: new Date().getTime(),
-          isAuthenticated: true,
-          sessionId: generateSessionId(),
-        };
-        localStorage.setItem("userSession", JSON.stringify(sessionData));
-      }
+      // Wait for sessionManager to be available
+      document.addEventListener("DOMContentLoaded", function () {
+        // Add a small delay to ensure sessionManager is properly initialized
+        setTimeout(() => {
+          // Check if user is already logged in using SessionManager
+          checkExistingSession();
+          initializeLoginForm();
+        }, 100);
+      });
 
-      function generateSessionId() {
-        return (
-          "session_" +
-          Math.random().toString(36).substr(2, 9) +
-          "_" +
-          Date.now()
-        );
-      }
-
+      // Check existing session using SessionManager
       function checkExistingSession() {
-        const session = localStorage.getItem("userSession");
-        if (session) {
-          try {
-            const sessionData = JSON.parse(session);
-            if (sessionData.isAuthenticated) {
-              // Check if session is still valid (24 hours)
-              const currentTime = new Date().getTime();
-              const sessionAge = currentTime - sessionData.loginTime;
-              const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        if (typeof sessionManager === "undefined") {
+          console.error("SessionManager not loaded");
+          return;
+        }
 
-              if (sessionAge <= maxAge) {
-                window.location.href = "dashboard.html";
-                return;
-              } else {
-                // Session expired, clear it
-                localStorage.removeItem("userSession");
-              }
-            }
-          } catch (error) {
-            console.error("Error parsing session data:", error);
-            localStorage.removeItem("userSession");
-          }
+        const sessionCheck = sessionManager.checkSession();
+        if (sessionCheck.valid) {
+          window.location.href = "dashboard.html";
         }
       }
 
-      // Login Form Handler
-      document.addEventListener("DOMContentLoaded", function () {
-        // Check if user is already logged in
-        checkExistingSession();
-
+      // Initialize login form
+      function initializeLoginForm() {
         const loginForm = document.getElementById("login-form");
         const loginBtn = document.getElementById("login-btn");
         const loginText = document.getElementById("login-text");
         const loginSpinner = document.getElementById("login-spinner");
 
+        if (!loginForm) {
+          console.error("Login form not found");
+          return;
+        }
+
         loginForm.addEventListener("submit", function (e) {
           e.preventDefault();
+
+          if (typeof sessionManager === "undefined") {
+            Swal.fire({
+              icon: "error",
+              title: "System Error",
+              text: "Session manager not available. Please refresh the page.",
+              confirmButtonText: "OK",
+            });
+            return;
+          }
 
           // Show loading state
           loginText.textContent = "Logging in...";
@@ -211,19 +200,34 @@
           // Simulate network delay
           setTimeout(() => {
             if (userId === "admin" && password === "admin@123456") {
-              // Create session
-              createSession(userId);
+              try {
+                // Create session using SessionManager
+                sessionManager.createSession(userId);
 
-              // Show success message
-              Swal.fire({
-                icon: "success",
-                title: "Login Successful",
-                text: "Welcome to Portal Admin Dashboard!",
-                timer: 1500,
-                showConfirmButton: false,
-              }).then(() => {
-                window.location.href = "dashboard.html";
-              });
+                // Show success message
+                Swal.fire({
+                  icon: "success",
+                  title: "Login Successful",
+                  text: "Welcome to Portal Admin Dashboard!",
+                  timer: 1500,
+                  showConfirmButton: false,
+                }).then(() => {
+                  window.location.href = "dashboard.html";
+                });
+              } catch (error) {
+                console.error("Error creating session:", error);
+                // Reset button state
+                loginText.textContent = "Log In";
+                loginSpinner.classList.add("d-none");
+                loginBtn.disabled = false;
+
+                Swal.fire({
+                  icon: "error",
+                  title: "Session Error",
+                  text: "Failed to create session. Please try again.",
+                  confirmButtonText: "OK",
+                });
+              }
             } else {
               // Reset button state
               loginText.textContent = "Log In";
@@ -276,7 +280,7 @@
             }
           });
         });
-      });
+      }
     </script>
   </body>
 </html>

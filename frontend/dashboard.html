@@ -59,33 +59,20 @@
     <script src="assets/js/sessionManager.js"></script>
     <script>
       (function () {
-        const session = localStorage.getItem("userSession");
-        if (!session) {
-          window.location.href = "index.html";
+        // Check session using SessionManager
+        const sessionCheck = sessionManager.checkSession();
+
+        if (!sessionCheck.valid) {
+          console.log("Session invalid:", sessionCheck.reason);
+          sessionManager.redirectToLogin();
           return;
         }
 
-        try {
-          const sessionData = JSON.parse(session);
-          if (!sessionData.isAuthenticated) {
-            window.location.href = "index.html";
-            return;
-          }
-
-          // Check if session has expired
-          const currentTime = new Date().getTime();
-          const sessionAge = currentTime - sessionData.loginTime;
-          const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-
-          if (sessionAge > maxAge) {
-            localStorage.removeItem("userSession");
-            window.location.href = "index.html";
-            return;
-          }
-        } catch (error) {
-          localStorage.removeItem("userSession");
-          window.location.href = "index.html";
-          return;
+        // Optional: Log session info for debugging
+        const userInfo = sessionManager.getUserInfo();
+        if (userInfo) {
+          console.log("User authenticated:", userInfo.userId);
+          console.log("Session ID:", userInfo.sessionId);
         }
       })();
     </script>
@@ -295,6 +282,14 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
+        // Check if user is authenticated before loading content
+        const sessionCheck = sessionManager.checkSession();
+        if (!sessionCheck.valid) {
+          console.log("Session invalid:", sessionCheck.reason);
+          sessionManager.redirectToLogin();
+          return;
+        }
+
         const tableBody = document.querySelector("#userTable tbody");
         const pageSizeSelect = document.getElementById("pageSize");
         const entryCount = document.getElementById("entryCount");
@@ -327,7 +322,34 @@
 
         async function fetchUsers() {
           try {
-            const res = await fetch("http://localhost:5000/api/users");
+            // Check session before making API call
+            const sessionCheck = sessionManager.checkSession();
+            if (!sessionCheck.valid) {
+              sessionManager.redirectToLogin();
+              return;
+            }
+
+            const res = await fetch("http://localhost:5000/api/users", {
+              headers: {
+                "Content-Type": "application/json",
+                // Add session ID to headers if needed for backend validation
+                "X-Session-ID": sessionCheck.sessionData?.sessionId || "",
+              },
+            });
+
+            // Handle session expired responses from server
+            if (res.status === 401 || res.status === 403) {
+              Swal.fire({
+                icon: "warning",
+                title: "Session Expired",
+                text: "Your session has expired. Please login again.",
+                confirmButtonText: "OK",
+              }).then(() => {
+                sessionManager.logout();
+              });
+              return;
+            }
+
             users = await res.json();
 
             // ✅ Sort users: oldest first (latest last)
@@ -342,12 +364,26 @@
             updateEntryCount();
           } catch (err) {
             console.error("Error fetching users:", err);
+
+            // Check if it's a network error that might indicate session issues
+            if (err.name === "TypeError" && err.message.includes("fetch")) {
+              Swal.fire({
+                icon: "error",
+                title: "Connection Error",
+                text: "Unable to connect to server. Please check your connection and try again.",
+                confirmButtonText: "OK",
+              });
+            }
+
             tableBody.innerHTML =
               '<tr><td colspan="5" class="text-danger text-center">Failed to load users.</td></tr>';
           }
         }
 
         function renderTable() {
+          // Update last activity when rendering table
+          sessionManager.updateLastActivity();
+
           tableBody.innerHTML = "";
           if (users.length === 0) {
             tableBody.innerHTML =
@@ -389,6 +425,7 @@
           if (currentPage > 1) {
             prevLi.addEventListener("click", (e) => {
               e.preventDefault();
+              sessionManager.updateLastActivity();
               currentPage--;
               renderTable();
               renderPagination();
@@ -404,6 +441,7 @@
             li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
             li.addEventListener("click", (e) => {
               e.preventDefault();
+              sessionManager.updateLastActivity();
               currentPage = i;
               renderTable();
               renderPagination();
@@ -421,6 +459,7 @@
           if (currentPage < pageCount) {
             nextLi.addEventListener("click", (e) => {
               e.preventDefault();
+              sessionManager.updateLastActivity();
               currentPage++;
               renderTable();
               renderPagination();
@@ -442,6 +481,7 @@
         }
 
         pageSizeSelect.addEventListener("change", () => {
+          sessionManager.updateLastActivity();
           pageSize = parseInt(pageSizeSelect.value);
           currentPage = 1;
           renderTable();
@@ -450,28 +490,64 @@
         });
 
         window.deleteUser = async function (id) {
+          // Check session before deletion
+          const sessionCheck = sessionManager.checkSession();
+          if (!sessionCheck.valid) {
+            sessionManager.redirectToLogin();
+            return;
+          }
+
           const result = await Swal.fire({
             title: "Are you sure?",
             text: "This user will be permanently deleted!",
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel",
           });
 
           if (result.isConfirmed) {
             try {
+              sessionManager.updateLastActivity();
+
               const res = await fetch(`http://localhost:5000/api/users/${id}`, {
                 method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  // Add session ID to headers if needed for backend validation
+                  "X-Session-ID": sessionCheck.sessionData?.sessionId || "",
+                },
               });
+
+              // Handle session expired responses from server
+              if (res.status === 401 || res.status === 403) {
+                Swal.fire({
+                  icon: "warning",
+                  title: "Session Expired",
+                  text: "Your session has expired. Please login again.",
+                  confirmButtonText: "OK",
+                }).then(() => {
+                  sessionManager.logout();
+                });
+                return;
+              }
+
               const data = await res.json();
 
               if (res.ok) {
                 Swal.fire(
                   "Deleted!",
-                  data.message || "User deleted.",
+                  data.message || "User deleted successfully.",
                   "success"
                 );
                 users = users.filter((u) => u._id !== id);
+
+                // Adjust pagination if current page becomes empty
+                const pageCount = Math.ceil(users.length / pageSize);
+                if (currentPage > pageCount && pageCount > 0) {
+                  currentPage = pageCount;
+                }
+
                 renderTable();
                 renderPagination();
                 updateEntryCount();
@@ -484,15 +560,28 @@
               }
             } catch (err) {
               console.error("Delete failed", err);
-              Swal.fire("Error", "Server error", "error");
+              Swal.fire(
+                "Error",
+                "Server error occurred while deleting user.",
+                "error"
+              );
             }
           }
         };
 
+        // Display user info from session
+        const userInfo = sessionManager.getUserInfo();
+        if (userInfo) {
+          console.log("Current user:", userInfo.userId);
+          console.log("Login time:", userInfo.loginTime);
+          console.log("Session ID:", userInfo.sessionId);
+        }
+
+        // Initial data fetch
         fetchUsers();
       });
 
-      // logout
+      // Logout functionality
       document.addEventListener("DOMContentLoaded", function () {
         const logoutBtn = document.getElementById("logout");
 
