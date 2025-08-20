@@ -24,6 +24,8 @@ mongoose
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Routes
+app.use(express.static("../frontend"));
+
 app.use("/api/users", authRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/sets", setsRoutes);
