@@ -196,7 +196,7 @@ quiz-app-admin/
 #### 1. Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/alias1506/quiz-app-admin.git
 cd quiz-app-admin
 ```
 
