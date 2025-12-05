@@ -418,4 +418,209 @@ router.delete("/by-set/:setId", async (req, res) => {
   }
 });
 
+// @route   POST /api/questions/generate-ai
+// @desc    Generate questions using Gemini AI
+router.post("/generate-ai", async (req, res) => {
+  try {
+    const { keywords, setId, numQuestions } = req.body;
+
+    if (!keywords || !setId || !numQuestions) {
+      return res.status(400).json({ message: "Keywords, setId, and numQuestions are required" });
+    }
+
+    const targetSet = await QuizSet.findById(setId);
+    if (!targetSet) {
+      return res.status(404).json({ message: "Set not found" });
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ message: "Gemini API key not configured" });
+    }
+
+    const Question = require("../models/questionModel");
+    const existingQuestions = await Question.find({ set: setId }).select('question');
+    const existingQuestionsText = existingQuestions.map(q => q.question).join('\n- ');
+
+    const { GoogleGenerativeAI } = require("@google/generative-ai");
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    
+    let existingQuestionsPrompt = '';
+    if (existingQuestions.length > 0) {
+      existingQuestionsPrompt = `\n\nIMPORTANT: Avoid generating questions similar to these existing questions in the database:\n- ${existingQuestionsText}\n\nGenerate completely NEW and DIFFERENT questions that are NOT duplicates or paraphrases of the above.`;
+    }
+    
+    const prompt = `Generate ${numQuestions} multiple choice quiz questions based on these keywords: ${keywords}${existingQuestionsPrompt}
+
+For each question, provide:
+1. A clear, concise question
+2. Exactly 4 options
+3. Mark the correct answer
+
+Format your response as a JSON array with this structure:
+[
+  {
+    "question": "Question text here?",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+    "correctAnswer": "The exact text of the correct option"
+  }
+]
+
+Important:
+- Generate exactly ${numQuestions} questions
+- Each question must have exactly 4 options
+- The correctAnswer must match one of the options exactly
+- Make questions clear and educational
+- Return ONLY the JSON array, no other text`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Extract JSON from response (handle markdown code blocks if present)
+    let jsonText = text.trim();
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/```\n?/g, '');
+    }
+    
+    let generatedQuestions = JSON.parse(jsonText);
+
+    // Validate generated questions
+    if (!Array.isArray(generatedQuestions) || generatedQuestions.length === 0) {
+      return res.status(500).json({ message: "AI generated invalid response" });
+    }
+
+    // Filter out duplicate questions and regenerate if needed
+    let existingQuestionsLower = existingQuestions.map(q => q.question.toLowerCase().trim());
+    let allGeneratedQuestionsLower = [];
+    let uniqueQuestions = [];
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    // First batch: filter initial generated questions
+    for (const q of generatedQuestions) {
+      const questionLower = q.question.toLowerCase().trim();
+      if (!existingQuestionsLower.includes(questionLower) && !allGeneratedQuestionsLower.includes(questionLower)) {
+        uniqueQuestions.push(q);
+        allGeneratedQuestionsLower.push(questionLower);
+      }
+    }
+
+    // Regenerate duplicates until we have the required number
+    while (uniqueQuestions.length < numQuestions && attempts < maxAttempts) {
+      attempts++;
+      const needed = numQuestions - uniqueQuestions.length;
+
+      // Update existing questions list to include newly generated ones
+      const allExistingText = [...existingQuestionsText.split('\n- '), ...allGeneratedQuestionsLower].join('\n- ');
+      
+      const retryPrompt = `Generate ${needed} multiple choice quiz questions based on these keywords: ${keywords}
+
+CRITICAL: Do NOT generate questions similar to these existing questions:
+- ${allExistingText}
+
+Generate COMPLETELY NEW and UNIQUE questions that are DIFFERENT from the above.
+
+For each question, provide:
+1. A clear, concise question
+2. Exactly 4 options
+3. Mark the correct answer
+
+Format your response as a JSON array with this structure:
+[
+  {
+    "question": "Question text here?",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+    "correctAnswer": "The exact text of the correct option"
+  }
+]
+
+Important:
+- Generate exactly ${needed} questions
+- Each question must have exactly 4 options
+- The correctAnswer must match one of the options exactly
+- Make questions clear and educational
+- Return ONLY the JSON array, no other text`;
+
+      const retryResult = await model.generateContent(retryPrompt);
+      const retryResponse = await retryResult.response;
+      const retryText = retryResponse.text();
+      
+      let retryJsonText = retryText.trim();
+      if (retryJsonText.startsWith('```json')) {
+        retryJsonText = retryJsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      } else if (retryJsonText.startsWith('```')) {
+        retryJsonText = retryJsonText.replace(/```\n?/g, '');
+      }
+
+      const retryQuestions = JSON.parse(retryJsonText);
+      
+      // Add only unique questions from retry
+      for (const q of retryQuestions) {
+        const questionLower = q.question.toLowerCase().trim();
+        if (!existingQuestionsLower.includes(questionLower) && !allGeneratedQuestionsLower.includes(questionLower)) {
+          uniqueQuestions.push(q);
+          allGeneratedQuestionsLower.push(questionLower);
+          if (uniqueQuestions.length >= numQuestions) break;
+        }
+      }
+    }
+
+    // Format questions for response (don't save yet)
+    const formattedQuestions = uniqueQuestions.slice(0, numQuestions).map(q => ({
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      set: targetSet.name,
+      setId: targetSet._id,
+      setInfo: {
+        _id: targetSet._id,
+        name: targetSet.name,
+        isActive: targetSet.isActive
+      }
+    }));
+
+    res.json({ 
+      success: true, 
+      questions: formattedQuestions,
+      count: formattedQuestions.length
+    });
+  } catch (err) {
+    console.error("Error generating questions:", err.message);
+    res.status(500).json({ 
+      message: "Failed to generate questions", 
+      error: err.message
+    });
+  }
+});
+
+// @route   POST /api/questions/save-generated
+// @desc    Save AI-generated questions
+router.post("/save-generated", async (req, res) => {
+  try {
+    const { questions } = req.body;
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ message: "No questions to save" });
+    }
+
+    // Save all questions
+    const savedQuestions = await Question.insertMany(questions);
+
+    res.json({ 
+      success: true, 
+      message: `Successfully saved ${savedQuestions.length} questions`,
+      count: savedQuestions.length
+    });
+  } catch (err) {
+    console.error("Error saving generated questions:", err);
+    res.status(500).json({ 
+      message: "Failed to save questions", 
+      error: err.message 
+    });
+  }
+});
+
 module.exports = router;

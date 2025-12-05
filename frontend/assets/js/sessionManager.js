@@ -14,7 +14,11 @@ class SessionManager {
       sessionId: this.generateSessionId(),
       lastActivity: Date.now(),
     };
-    sessionStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
+    try {
+      sessionStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
+    } catch (error) {
+      console.error("Error creating session - storage may be disabled:", error);
+    }
     return sessionData;
   }
 
@@ -25,10 +29,10 @@ class SessionManager {
 
   // Check if session exists and is valid
   checkSession() {
-    const session = sessionStorage.getItem(this.sessionKey);
-    if (!session) return { valid: false, reason: "No session found" };
-
     try {
+      const session = sessionStorage.getItem(this.sessionKey);
+      if (!session) return { valid: false, reason: "No session found" };
+
       const sessionData = JSON.parse(session);
       if (!sessionData.isAuthenticated)
         return { valid: false, reason: "Session not authenticated" };
@@ -43,43 +47,46 @@ class SessionManager {
       this.updateLastActivity();
       return { valid: true, sessionData };
     } catch (error) {
-      console.error("Error parsing session data:", error);
-      this.clearSession();
-      return { valid: false, reason: "Invalid session data" };
+      console.error("Error checking session - storage may be disabled:", error);
+      return { valid: false, reason: "Storage access error" };
     }
   }
 
   // Update last activity timestamp
   updateLastActivity() {
-    const session = sessionStorage.getItem(this.sessionKey);
-    if (session) {
-      try {
+    try {
+      const session = sessionStorage.getItem(this.sessionKey);
+      if (session) {
         const sessionData = JSON.parse(session);
         sessionData.lastActivity = Date.now();
         sessionStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
-      } catch (error) {
-        console.error("Error updating last activity:", error);
       }
+    } catch (error) {
+      console.error("Error updating last activity - storage may be disabled:", error);
     }
   }
 
   // Get current session data
   getSession() {
-    const session = sessionStorage.getItem(this.sessionKey);
-    if (session) {
-      try {
+    try {
+      const session = sessionStorage.getItem(this.sessionKey);
+      if (session) {
         return JSON.parse(session);
-      } catch (error) {
-        console.error("Error parsing session data:", error);
-        return null;
       }
+      return null;
+    } catch (error) {
+      console.error("Error getting session - storage may be disabled:", error);
+      return null;
     }
-    return null;
   }
 
   // Clear session
   clearSession() {
-    sessionStorage.removeItem(this.sessionKey);
+    try {
+      sessionStorage.removeItem(this.sessionKey);
+    } catch (error) {
+      console.error("Error clearing session - storage may be disabled:", error);
+    }
   }
 
   // Logout user

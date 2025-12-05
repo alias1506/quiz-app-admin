@@ -13,7 +13,7 @@
       content="Portal - Bootstrap 5 Admin Dashboard Template For Developers"
     />
     <meta name="author" content="Xiaoying Riley at 3rd Wave Media" />
-    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="shortcut icon" href="assets/images/club-logo.jpg" />
 
     <!-- FontAwesome JS-->
     <script defer src="assets/plugins/fontawesome/js/all.min.js"></script>
@@ -162,10 +162,11 @@
             <a class="app-logo" href="dashboard.html">
               <img
                 class="logo-icon me-2"
-                src="assets/images/app-logo.svg"
+                src="assets/images/club-logo.jpg"
                 alt="logo"
+                style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"
               />
-              <span class="logo-text">PORTAL</span>
+              <span class="logo-text">QUIZ ADMIN</span>
             </a>
           </div>
 
@@ -173,11 +174,17 @@
             <ul class="app-menu list-unstyled accordion" id="menu-accordion">
               <li class="nav-item">
                 <a class="nav-link active" href="dashboard.html">
+                  <span class="nav-icon">
+                    <i class="fas fa-chart-line fa-fw"></i>
+                  </span>
                   <span class="nav-link-text">Dashboard</span>
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="allQuestions.html">
+                  <span class="nav-icon">
+                    <i class="fas fa-question-circle fa-fw"></i>
+                  </span>
                   <span class="nav-link-text">Add Questions</span>
                 </a>
               </li>
@@ -189,19 +196,48 @@
 
     <div class="app-wrapper">
       <div class="px-5 py-3">
-        <h1>Users</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="mb-0">Users</h1>
+          <button 
+            id="bulkDeleteBtn" 
+            class="btn btn-danger" 
+            disabled
+            onclick="deleteSelectedUsers()">
+            <i class="fas fa-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+          </button>
+        </div>
 
         <table class="table table-striped mb-0" id="userTable">
           <thead>
             <tr>
+              <th scope="col">
+                <input 
+                  type="checkbox" 
+                  id="selectAll" 
+                  class="form-check-input" 
+                  style="cursor: pointer;"
+                  onchange="toggleSelectAll(this)">
+              </th>
               <th scope="col">#</th>
               <th scope="col">Name</th>
               <th scope="col">Email</th>
               <th scope="col">Joined On</th>
+              <th scope="col">Attempts</th>
+              <th scope="col">Status</th>
               <th scope="col">Action</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <!-- Loader Row -->
+            <tr id="usersLoader" style="display: none;">
+              <td colspan="8" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted mb-0">Loading users...</p>
+              </td>
+            </tr>
+          </tbody>
         </table>
 
         <!-- Spacer to prevent content from hiding behind fixed pagination -->
@@ -244,14 +280,7 @@
         <div class="container text-center py-3">
           <small class="copyright">
             Designed with <span class="sr-only">love</span>
-            <i class="fas fa-heart" style="color: #fb866a"></i> by
-            <a
-              class="app-link"
-              href="http://themes.3rdwavemedia.com"
-              target="_blank"
-              >Xiaoying Riley</a
-            >
-            for developers
+            <i class="fas fa-heart" style="color: #fb866a"></i> by IIE Tech Club
           </small>
         </div>
       </footer>
@@ -305,7 +334,52 @@
           }
         }
 
+        // Update countdown timers
+        let countdownInterval = null;
+        
+        function updateCountdowns() {
+          // Clear existing interval
+          if (countdownInterval) {
+            clearInterval(countdownInterval);
+          }
+          
+          // Update every second
+          countdownInterval = setInterval(() => {
+            const countdownElements = document.querySelectorAll('.countdown');
+            const now = new Date().getTime();
+            let hasActiveCountdowns = false;
+            
+            countdownElements.forEach(element => {
+              const resetTime = parseInt(element.dataset.reset);
+              const timeRemaining = resetTime - now;
+              
+              if (timeRemaining <= 0) {
+                // Time's up - show ready status
+                element.className = 'badge bg-success';
+                element.innerHTML = '<i class="fas fa-check"></i> Ready';
+              } else {
+                hasActiveCountdowns = true;
+                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+                
+                element.textContent = `${hours}h ${minutes}m ${seconds}s`;
+              }
+            });
+            
+            // If no active countdowns, clear interval
+            if (!hasActiveCountdowns && countdownElements.length > 0) {
+              clearInterval(countdownInterval);
+              countdownInterval = null;
+            }
+          }, 1000);
+        }
+
         async function fetchUsers() {
+          // Show loader row
+          const loader = document.getElementById("usersLoader");
+          if (loader) loader.style.display = "table-row";
+          
           try {
             // Check session before making API call
             const sessionCheck = sessionManager.checkSession();
@@ -349,6 +423,10 @@
             updateEntryCount();
           } catch (err) {
             console.error("Error fetching users:", err);
+            
+            // Hide loader on error
+            const loader = document.getElementById("usersLoader");
+            if (loader) loader.style.display = "none";
 
             // Check if it's a network error that might indicate session issues
             if (err.name === "TypeError" && err.message.includes("fetch")) {
@@ -361,7 +439,11 @@
             }
 
             tableBody.innerHTML =
-              '<tr><td colspan="5" class="text-danger text-center">Failed to load users.</td></tr>';
+              '<tr><td colspan="8" class="text-danger text-center">Failed to load users.</td></tr>';
+          } finally {
+            // Hide loader row
+            const loader = document.getElementById("usersLoader");
+            if (loader) loader.style.display = "none";
           }
         }
 
@@ -372,23 +454,75 @@
           tableBody.innerHTML = "";
           if (users.length === 0) {
             tableBody.innerHTML =
-              '<tr><td colspan="5" class="text-center text-muted">No records found</td></tr>';
+              '<tr><td colspan="8" class="text-center text-muted">No records found</td></tr>';
             return;
           }
 
           const start = (currentPage - 1) * pageSize;
           const paginatedUsers = users.slice(start, start + pageSize);
+          const now = new Date();
 
           paginatedUsers.forEach((user, index) => {
             // ✅ Use the formatDate function for consistent dd/mm/yyyy format
             const joinedDate = formatDate(user.joinedOn || user.createdAt);
 
+            // Calculate attempt status
+            const dailyAttempts = user.dailyAttempts || 0;
+            const lastAttemptDate = user.lastAttemptDate ? new Date(user.lastAttemptDate) : null;
+            
+            let attemptsDisplay = `${dailyAttempts}/3`;
+            let statusDisplay = '';
+            
+            if (lastAttemptDate) {
+              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              const lastAttemptDay = new Date(
+                lastAttemptDate.getFullYear(),
+                lastAttemptDate.getMonth(),
+                lastAttemptDate.getDate()
+              );
+              
+              if (lastAttemptDay.getTime() === today.getTime()) {
+                // Same day
+                if (dailyAttempts >= 3) {
+                  // Limit reached - show countdown
+                  const tomorrow = new Date(today);
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  const timeRemaining = tomorrow.getTime() - now.getTime();
+                  
+                  const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                  const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                  const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+                  
+                  statusDisplay = `<span class="badge bg-danger countdown" data-reset="${tomorrow.getTime()}">${hours}h ${minutes}m ${seconds}s</span>`;
+                } else {
+                  statusDisplay = '<span class="badge bg-success">Available</span>';
+                }
+              } else {
+                // Different day - reset available
+                attemptsDisplay = '0/3';
+                statusDisplay = '<span class="badge bg-success"><i class="fas fa-check"></i> Ready</span>';
+              }
+            } else {
+              // No attempts yet
+              statusDisplay = '<span class="badge bg-success"><i class="fas fa-check"></i> Ready</span>';
+            }
+
             tableBody.innerHTML += `
               <tr>
+                <td>
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input user-checkbox" 
+                    style="cursor: pointer;"
+                    data-user-id="${user._id}"
+                    onchange="updateBulkDeleteButton()">
+                </td>
                 <th scope="row">${start + index + 1}</th>
                 <td>${user.name || "N/A"}</td>
                 <td>${user.email || "N/A"}</td>
                 <td>${joinedDate}</td>
+                <td><span class="badge bg-primary">${attemptsDisplay}</span></td>
+                <td>${statusDisplay}</td>
                 <td>
                   <button class="btn btn-sm btn-danger" onclick="deleteUser('${
                     user._id
@@ -397,6 +531,13 @@
               </tr>
             `;
           });
+          
+          // Start countdown updates
+          updateCountdowns();
+          
+          // Reset select all checkbox
+          document.getElementById('selectAll').checked = false;
+          updateBulkDeleteButton();
         }
 
         function renderPagination() {
@@ -520,11 +661,6 @@
               const data = await res.json();
 
               if (res.ok) {
-                Swal.fire(
-                  "Deleted!",
-                  data.message || "User deleted successfully.",
-                  "success"
-                );
                 users = users.filter((u) => u._id !== id);
 
                 // Adjust pagination if current page becomes empty
@@ -536,6 +672,12 @@
                 renderTable();
                 renderPagination();
                 updateEntryCount();
+                
+                Swal.fire(
+                  "Deleted!",
+                  data.message || "User deleted successfully.",
+                  "success"
+                );
               } else {
                 Swal.fire(
                   "Error",
@@ -554,6 +696,129 @@
           }
         };
 
+        // Toggle select all checkboxes
+        window.toggleSelectAll = function(checkbox) {
+          const checkboxes = document.querySelectorAll('.user-checkbox');
+          checkboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+          });
+          updateBulkDeleteButton();
+        };
+
+        // Update bulk delete button state and count
+        window.updateBulkDeleteButton = function() {
+          const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+          const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+          const selectedCount = document.getElementById('selectedCount');
+          const selectAllCheckbox = document.getElementById('selectAll');
+          
+          if (checkboxes.length > 0) {
+            bulkDeleteBtn.disabled = false;
+            selectedCount.textContent = checkboxes.length;
+          } else {
+            bulkDeleteBtn.disabled = true;
+            selectedCount.textContent = '0';
+            selectAllCheckbox.checked = false;
+          }
+        };
+
+        // Delete selected users
+        window.deleteSelectedUsers = async function() {
+          const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+          
+          if (checkboxes.length === 0) {
+            return;
+          }
+
+          const userIds = Array.from(checkboxes).map(cb => cb.dataset.userId);
+          
+          const result = await Swal.fire({
+            title: "Are you sure?",
+            html: `You are about to delete <strong>${userIds.length}</strong> user(s). This action cannot be undone!`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete them!",
+            cancelButtonText: "Cancel",
+          });
+
+          if (result.isConfirmed) {
+            try {
+              sessionManager.updateLastActivity();
+              
+              let successCount = 0;
+              let errorCount = 0;
+              
+              // Delete users one by one
+              for (const userId of userIds) {
+                try {
+                  const res = await fetch(`/api/users/${userId}`, {
+                    method: "DELETE",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  });
+
+                  if (res.status === 401 || res.status === 403) {
+                    Swal.fire({
+                      icon: "warning",
+                      title: "Session Expired",
+                      text: "Your session has expired. Please login again.",
+                      confirmButtonText: "OK",
+                    }).then(() => {
+                      sessionManager.logout();
+                    });
+                    return;
+                  }
+
+                  if (res.ok) {
+                    successCount++;
+                    users = users.filter((u) => u._id !== userId);
+                  } else {
+                    errorCount++;
+                  }
+                } catch (err) {
+                  console.error("Delete failed for user:", userId, err);
+                  errorCount++;
+                }
+              }
+
+              // Show result
+              if (successCount > 0) {
+                // Adjust pagination if current page becomes empty
+                const pageCount = Math.ceil(users.length / pageSize);
+                if (currentPage > pageCount && pageCount > 0) {
+                  currentPage = pageCount;
+                }
+
+                renderTable();
+                renderPagination();
+                updateEntryCount();
+                
+                Swal.fire(
+                  "Deleted!",
+                  `Successfully deleted ${successCount} user(s).${errorCount > 0 ? ` Failed to delete ${errorCount} user(s).` : ''}`,
+                  successCount === userIds.length ? "success" : "warning"
+                );
+              } else {
+                Swal.fire(
+                  "Error",
+                  "Failed to delete selected users.",
+                  "error"
+                );
+              }
+            } catch (err) {
+              console.error("Bulk delete failed", err);
+              Swal.fire(
+                "Error",
+                "Server error occurred while deleting users.",
+                "error"
+              );
+            }
+          }
+        };
+
         // Display user info from session
         const userInfo = sessionManager.getUserInfo();
         if (userInfo) {
@@ -564,6 +829,13 @@
 
         // Initial data fetch
         fetchUsers();
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+          if (countdownInterval) {
+            clearInterval(countdownInterval);
+          }
+        });
       });
 
       // Logout functionality

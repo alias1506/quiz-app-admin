@@ -3,13 +3,14 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 
 const authRoutes = require("./routes/authRoute");
 const questionRoutes = require("./routes/questionRoute");
 const setsRoutes = require("./routes/setsRoute");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -23,14 +24,35 @@ mongoose
   .then(() => console.log("✅ MongoDB connected to 'Quiz' database"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// Routes
-app.use(express.static("../frontend"));
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    status: "ok", 
+    message: "Server is running",
+    timestamp: new Date().toISOString()
+  });
+});
 
+// API Routes (must come before static files)
 app.use("/api/users", authRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/sets", setsRoutes);
 
+// Serve static files (HTML, CSS, JS)
+app.use(express.static("../frontend"));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(500).json({ 
+    message: "Internal server error", 
+    error: process.env.NODE_ENV === "development" ? err.message : undefined 
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`📁 Serving frontend from: ${require('path').resolve(__dirname, '../frontend')}`);
+  console.log(`🔌 Admin panel: http://localhost:${PORT}`);
 });
