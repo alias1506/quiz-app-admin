@@ -335,12 +335,3 @@ For issues or questions:
 - [ ] Multi-admin support
 - [ ] Activity logs
 
----
-
-<div align="center">
-
-**Powered by AI • Built with Modern Technologies**
-
-[⬆ Back to Top](#-quiz-application---admin-panel)
-
-</div>
