@@ -89,8 +89,8 @@ The Quiz Admin Panel is a powerful, feature-rich content management system desig
 
 ### User Management
 
-#### Real-Time Monitoring
-- 🔴 **Live Updates** - User activity syncs instantly via WebSocket
+#### User Monitoring
+- 🔄 **Auto-Refresh** - Polling-based updates every 5 seconds (Vercel-compatible)
 - 📊 **Session Tracking** - View all quiz attempts with timestamps
 - 🔢 **Attempt Numbers** - Track total attempts per user (#1, #2, #3...)
 - ⏰ **Date/Time Display** - Precise timestamp for each quiz session
@@ -99,8 +99,9 @@ The Quiz Admin Panel is a powerful, feature-rich content management system desig
 - ⏳ **Countdown Timers** - Live countdown until attempt reset
 
 #### User Table Features
+- ✅ Automatic updates without page refresh
 - ✅ Bulk selection and deletion
-- ✅ Real-time status updates (Available/Blocked)
+- ✅ Status updates (Available/Blocked)
 - ✅ Historical data preservation (all attempts saved)
 - ✅ Pagination (10/25/50/100 per page)
 - ✅ Email and name display
@@ -148,7 +149,6 @@ The Quiz Admin Panel is a powerful, feature-rich content management system desig
 | **Express** | 5.1.0 | Web framework |
 | **MongoDB** | 8.17.0 | Database |
 | **Mongoose** | 8.17.0 | MongoDB ODM |
-| **Socket.IO** | Latest | Real-time bidirectional communication |
 | **Google Generative AI** | 0.21.0 | AI question generation |
 | **Axios** | 1.7.9 | HTTP client |
 
@@ -209,8 +209,11 @@ quiz-app-admin/
 Access the live admin dashboard to:
 - Manage quiz questions
 - Generate AI-powered questions
-- Monitor user activity in real-time
+- Monitor user activity with auto-refresh polling
 - Create and manage quiz sets
+
+### 🔄 Live Updates
+The admin panel uses **polling-based live updates** (Vercel-compatible) that automatically refreshes user data every 5 seconds, ensuring you always see the latest information without manual page refresh.
 
 ---
 
@@ -260,6 +263,120 @@ npm start
 ```
 
 Access admin panel at: `http://localhost:5001`
+
+---
+
+## 🚀 Deployment
+
+### Vercel Deployment (Recommended)
+
+This application is optimized for Vercel's serverless platform with **polling-based live updates** instead of WebSocket.
+
+#### Why Polling Instead of WebSocket?
+
+Vercel uses serverless functions that don't maintain persistent connections. Our polling solution checks for updates every 5 seconds, providing near real-time updates without WebSocket errors.
+
+#### Prerequisites
+
+1. **MongoDB Atlas** (Required for Vercel)
+   - Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+   - Create a free cluster
+   - Create database user
+   - Whitelist all IPs: `0.0.0.0/0`
+   - Get connection string: `mongodb+srv://username:password@cluster.mongodb.net/Quiz`
+
+2. **Google Gemini API Key**
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create and copy API key
+
+#### Deployment Steps
+
+1. **Install Vercel CLI**
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Login to Vercel**
+   ```bash
+   vercel login
+   ```
+
+3. **Navigate to admin folder**
+   ```bash
+   cd quiz-app-admin
+   ```
+
+4. **Deploy**
+   ```bash
+   vercel
+   ```
+
+5. **Set Environment Variables** in Vercel Dashboard:
+   - Go to Project → Settings → Environment Variables
+   - Add the following:
+     ```
+     MONGO_URI=mongodb+srv://your-connection-string
+     GEMINI_API_KEY=your-gemini-api-key
+     NODE_ENV=production
+     PORT=5001
+     ```
+
+6. **Redeploy to apply environment variables**:
+   ```bash
+   vercel --prod
+   ```
+
+7. **Copy deployment URL** (e.g., `https://quiz-app-admin-xxxx.vercel.app`)
+
+#### Features
+
+- ✅ **Serverless Functions** - Auto-scaling API endpoints
+- ✅ **Automatic HTTPS** - Secure by default
+- ✅ **CDN** - Global static file delivery
+- ✅ **Polling Updates** - Auto-refresh every 5 seconds (no WebSocket needed)
+- ✅ **Zero Config** - Works out of the box
+
+#### How Polling Works
+
+The admin dashboard automatically polls `/api/users/poll` every 5 seconds:
+
+```javascript
+// Checks for new users since last poll
+GET /api/users/poll?since=1733616000000
+
+// Response
+{
+  "users": [...],
+  "timestamp": 1733616005000,
+  "hasUpdates": true
+}
+```
+
+When `hasUpdates: true`, the dashboard automatically refreshes the user table.
+
+#### Bandwidth Usage
+
+- Poll request: ~1KB
+- Polls per hour: 720 (every 5 seconds)
+- Monthly bandwidth: ~500MB
+- **Result**: Well within Vercel free tier (100GB/month) 🎉
+
+#### Troubleshooting
+
+**Issue: Cannot connect to MongoDB**
+- Verify MongoDB Atlas IP whitelist includes `0.0.0.0/0`
+- Check connection string format
+- Ensure database user has read/write permissions
+
+**Issue: AI generation fails**
+- Verify `GEMINI_API_KEY` in Vercel dashboard
+- Check API key is active in Google AI Studio
+- Review Vercel function logs
+
+**Issue: Admin panel not updating**
+- Check browser console for polling errors
+- Verify `/api/users/poll` endpoint returns data
+- Ensure MongoDB timestamps are enabled
 
 ---
 
