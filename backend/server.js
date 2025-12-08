@@ -4,17 +4,30 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const authRoutes = require("./routes/authRoute");
 const questionRoutes = require("./routes/questionRoute");
 const setsRoutes = require("./routes/setsRoute");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Make io accessible to routes
+app.set('io', io);
 
 // MongoDB Connection
 mongoose
@@ -41,6 +54,15 @@ app.use("/api/sets", setsRoutes);
 // Serve static files (HTML, CSS, JS)
 app.use(express.static("../frontend"));
 
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('Admin client connected:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('Admin client disconnected:', socket.id);
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Error:", err);
@@ -51,8 +73,9 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`📁 Serving frontend from: ${require('path').resolve(__dirname, '../frontend')}`);
   console.log(`🔌 Admin panel: http://localhost:${PORT}`);
+  console.log(`📡 Socket.IO server ready`);
 });

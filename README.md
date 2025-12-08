@@ -9,7 +9,7 @@
 
 **Intelligent admin dashboard for managing quiz questions with AI-powered generation**
 
-[Features](#features) • [Tech Stack](#tech-stack) • [Installation](#installation) • [Configuration](#configuration)
+[Live Demo](https://quiz-app-admin-2grs.onrender.com) • [Features](#features) • [Tech Stack](#tech-stack) • [Installation](#installation)
 
 </div>
 
@@ -87,6 +87,25 @@ The Quiz Admin Panel is a powerful, feature-rich content management system desig
 - ✅ Questions linked to sets via dropdown
 - ✅ Set deletion cascades to questions
 
+### User Management
+
+#### Real-Time Monitoring
+- 🔴 **Live Updates** - User activity syncs instantly via WebSocket
+- 📊 **Session Tracking** - View all quiz attempts with timestamps
+- 🔢 **Attempt Numbers** - Track total attempts per user (#1, #2, #3...)
+- ⏰ **Date/Time Display** - Precise timestamp for each quiz session
+- 📈 **Score Tracking** - View scores for completed quizzes
+- 🚫 **Attempt Limits** - Monitor 3 attempts per 24 hours
+- ⏳ **Countdown Timers** - Live countdown until attempt reset
+
+#### User Table Features
+- ✅ Bulk selection and deletion
+- ✅ Real-time status updates (Available/Blocked)
+- ✅ Historical data preservation (all attempts saved)
+- ✅ Pagination (10/25/50/100 per page)
+- ✅ Email and name display
+- ✅ Action buttons for management
+
 ### User Interface
 
 #### Dashboard Features
@@ -129,6 +148,7 @@ The Quiz Admin Panel is a powerful, feature-rich content management system desig
 | **Express** | 5.1.0 | Web framework |
 | **MongoDB** | 8.17.0 | Database |
 | **Mongoose** | 8.17.0 | MongoDB ODM |
+| **Socket.IO** | Latest | Real-time bidirectional communication |
 | **Google Generative AI** | 0.21.0 | AI question generation |
 | **Axios** | 1.7.9 | HTTP client |
 
@@ -182,6 +202,18 @@ quiz-app-admin/
 
 ---
 
+## 🚀 Live Application
+
+**Admin Panel:** [https://quiz-app-admin-2grs.onrender.com](https://quiz-app-admin-2grs.onrender.com)
+
+Access the live admin dashboard to:
+- Manage quiz questions
+- Generate AI-powered questions
+- Monitor user activity in real-time
+- Create and manage quiz sets
+
+---
+
 ## 📦 Installation
 
 ### Prerequisites
@@ -189,21 +221,19 @@ quiz-app-admin/
 - **Node.js** v16.0.0 or higher
 - **MongoDB** v4.4 or higher
 - **npm** or **yarn**
-- **Google Gemini API Key** (for AI features)
 
-### Step-by-Step Setup
+### Quick Start
 
 #### 1. Clone Repository
 
 ```bash
 git clone https://github.com/alias1506/quiz-app-admin.git
-cd quiz-app-admin
+cd quiz-app-admin/backend
 ```
 
-#### 2. Install Backend Dependencies
+#### 2. Install Dependencies
 
 ```bash
-cd backend
 npm install
 ```
 
@@ -223,31 +253,13 @@ MONGO_URI=mongodb://localhost:27017/Quiz
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-#### 4. Get Gemini API Key
-
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Sign in with Google account
-3. Click "Create API Key"
-4. Copy and paste into `.env` file
-
-#### 5. Start Services
+#### 4. Start Application
 
 ```bash
-# Start MongoDB
-mongod --dbpath=/path/to/data
-
-# Start backend (from backend directory)
 npm start
-
-# Or use nodemon for development
-npm run start
 ```
 
-#### 6. Access Admin Panel
-
-```
-http://localhost:5001
-```
+Access admin panel at: `http://localhost:5001`
 
 ---
 
@@ -262,62 +274,13 @@ http://localhost:5001
 | `GEMINI_API_KEY` | Google Gemini API key | Yes (for AI) | - |
 | `NODE_ENV` | Environment mode | No | development |
 
-### Gemini API Configuration
+### AI Features
 
-The application uses Google's Gemini 2.0 Flash model:
-
-```javascript
-Model: gemini-2.0-flash
-Features:
+Powered by **Google Gemini 2.0 Flash** model with:
 - Fast response time
 - High-quality question generation
-- Free tier available
+- Automatic duplicate detection
 - JSON output formatting
-- Multi-turn conversations
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### AI Generation Fails
-```
-Error: "Failed to generate questions"
-
-Solutions:
-1. Check GEMINI_API_KEY in .env
-2. Verify API key is valid
-3. Check internet connection
-4. Check Gemini API quota
-5. Review backend console logs
-```
-
-#### No Questions Generated
-```
-Problem: AI generates 0 questions
-
-Causes:
-- All generated questions are duplicates
-- Too specific keywords
-- Set has too many similar questions
-
-Solutions:
-- Use different/broader keywords
-- Try fewer questions at once
-- Check existing questions in set
-```
-
-#### Cannot Activate Set
-```
-Error: "Set doesn't have enough questions"
-
-Solution:
-- Set must have MORE than 5 questions
-- Add more questions to the set
-- Check question count in Show Sets modal
-```
 
 ---
 

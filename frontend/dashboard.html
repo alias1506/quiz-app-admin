@@ -175,7 +175,9 @@
               <li class="nav-item">
                 <a class="nav-link active" href="dashboard.html">
                   <span class="nav-icon">
-                    <i class="fas fa-chart-line fa-fw"></i>
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-house-door" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" d="M7.646 1.146a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 .146.354v7a.5.5 0 0 1-.5.5H9.5a.5.5 0 0 1-.5-.5v-4H7v4a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5v-7a.5.5 0 0 1 .146-.354l6-6zM2.5 7.707V14H6v-4a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v4h3.5V7.707L8 2.207l-5.5 5.5z"/>
+                    </svg>
                   </span>
                   <span class="nav-link-text">Dashboard</span>
                 </a>
@@ -183,9 +185,12 @@
               <li class="nav-item">
                 <a class="nav-link" href="allQuestions.html">
                   <span class="nav-icon">
-                    <i class="fas fa-question-circle fa-fw"></i>
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-question-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                      <path d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                    </svg>
                   </span>
-                  <span class="nav-link-text">Add Questions</span>
+                  <span class="nav-link-text">Questions</span>
                 </a>
               </li>
             </ul>
@@ -221,7 +226,9 @@
               <th scope="col">#</th>
               <th scope="col">Name</th>
               <th scope="col">Email</th>
-              <th scope="col">Joined On</th>
+              <th scope="col">Score</th>
+              <th scope="col">Attempt #</th>
+              <th scope="col">Date/Time</th>
               <th scope="col">Attempts</th>
               <th scope="col">Status</th>
               <th scope="col">Action</th>
@@ -230,7 +237,7 @@
           <tbody>
             <!-- Loader Row -->
             <tr id="usersLoader" style="display: none;">
-              <td colspan="8" class="text-center py-5">
+              <td colspan="10" class="text-center py-5">
                 <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                   <span class="visually-hidden">Loading...</span>
                 </div>
@@ -292,9 +299,29 @@
     <script src="assets/plugins/chart.js/chart.min.js"></script>
     <script src="assets/js/index-charts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="assets/js/main.js"></script>
 
     <script>
+      // Initialize Socket.IO connection
+      const socket = io('http://localhost:5001', {
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 10
+      });
+
+      socket.on('connect', () => {
+        console.log('✅ Connected to real-time updates');
+      });
+
+      socket.on('disconnect', () => {
+        console.log('❌ Disconnected from real-time updates');
+      });
+
+      socket.on('connect_error', (error) => {
+        console.log('⚠️ Connection error:', error.message);
+      });
+
       document.addEventListener("DOMContentLoaded", function () {
         // Check if user is authenticated before loading content
         const sessionCheck = sessionManager.checkSession();
@@ -454,7 +481,7 @@
           tableBody.innerHTML = "";
           if (users.length === 0) {
             tableBody.innerHTML =
-              '<tr><td colspan="8" class="text-center text-muted">No records found</td></tr>';
+              '<tr><td colspan="10" class="text-center text-muted">No records found</td></tr>';
             return;
           }
 
@@ -463,8 +490,21 @@
           const now = new Date();
 
           paginatedUsers.forEach((user, index) => {
-            // ✅ Use the formatDate function for consistent dd/mm/yyyy format
-            const joinedDate = formatDate(user.joinedOn || user.createdAt);
+            // Format date/time
+            const dateObj = user.joinedOn ? new Date(user.joinedOn) : (user.createdAt ? new Date(user.createdAt) : new Date());
+            const dateStr = formatDate(dateObj);
+            const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            const dateTimeDisplay = `${dateStr}<br><small class="text-muted">${timeStr}</small>`;
+
+            // Score display
+            const scoreDisplay = user.score !== null && user.score !== undefined 
+              ? `<span class="badge bg-info">${user.score}/${user.total || 'N/A'}</span>`
+              : '<span class="text-muted">-</span>';
+
+            // Attempt Number display
+            const attemptNumberDisplay = user.attemptNumber 
+              ? `<span class="badge bg-secondary">#${user.attemptNumber}</span>`
+              : '<span class="text-muted">-</span>';
 
             // Calculate attempt status
             const dailyAttempts = user.dailyAttempts || 0;
@@ -520,7 +560,9 @@
                 <th scope="row">${start + index + 1}</th>
                 <td>${user.name || "N/A"}</td>
                 <td>${user.email || "N/A"}</td>
-                <td>${joinedDate}</td>
+                <td>${scoreDisplay}</td>
+                <td>${attemptNumberDisplay}</td>
+                <td>${dateTimeDisplay}</td>
                 <td><span class="badge bg-primary">${attemptsDisplay}</span></td>
                 <td>${statusDisplay}</td>
                 <td>
@@ -829,11 +871,30 @@
 
         // Initial data fetch
         fetchUsers();
+
+        // Listen for real-time updates
+        socket.on('user:created', (data) => {
+          console.log('New user(s) created:', data);
+          fetchUsers(); // Refresh the user list
+        });
+
+        socket.on('user:updated', (data) => {
+          console.log('User updated:', data);
+          fetchUsers(); // Refresh the user list
+        });
+
+        socket.on('user:deleted', (data) => {
+          console.log('User deleted:', data);
+          fetchUsers(); // Refresh the user list
+        });
         
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
           if (countdownInterval) {
             clearInterval(countdownInterval);
+          }
+          if (socket) {
+            socket.disconnect();
           }
         });
       });
