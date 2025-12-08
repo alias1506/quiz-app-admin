@@ -90,7 +90,6 @@ The Quiz Admin Panel is a powerful, feature-rich content management system desig
 ### User Management
 
 #### User Monitoring
-- 🔄 **Auto-Refresh** - Polling-based updates every 5 seconds (Vercel-compatible)
 - 📊 **Session Tracking** - View all quiz attempts with timestamps
 - 🔢 **Attempt Numbers** - Track total attempts per user (#1, #2, #3...)
 - ⏰ **Date/Time Display** - Precise timestamp for each quiz session
@@ -99,7 +98,6 @@ The Quiz Admin Panel is a powerful, feature-rich content management system desig
 - ⏳ **Countdown Timers** - Live countdown until attempt reset
 
 #### User Table Features
-- ✅ Automatic updates without page refresh
 - ✅ Bulk selection and deletion
 - ✅ Status updates (Available/Blocked)
 - ✅ Historical data preservation (all attempts saved)
@@ -209,11 +207,8 @@ quiz-app-admin/
 Access the live admin dashboard to:
 - Manage quiz questions
 - Generate AI-powered questions
-- Monitor user activity with auto-refresh polling
+- Monitor user activity
 - Create and manage quiz sets
-
-### 🔄 Live Updates
-The admin panel uses **polling-based live updates** (Vercel-compatible) that automatically refreshes user data every 5 seconds, ensuring you always see the latest information without manual page refresh.
 
 ---
 
@@ -270,11 +265,7 @@ Access admin panel at: `http://localhost:5001`
 
 ### Vercel Deployment (Recommended)
 
-This application is optimized for Vercel's serverless platform with **polling-based live updates** instead of WebSocket.
-
-#### Why Polling Instead of WebSocket?
-
-Vercel uses serverless functions that don't maintain persistent connections. Our polling solution checks for updates every 5 seconds, providing near real-time updates without WebSocket errors.
+This application is optimized for Vercel's serverless platform.
 
 #### Prerequisites
 
@@ -333,33 +324,7 @@ Vercel uses serverless functions that don't maintain persistent connections. Our
 - ✅ **Serverless Functions** - Auto-scaling API endpoints
 - ✅ **Automatic HTTPS** - Secure by default
 - ✅ **CDN** - Global static file delivery
-- ✅ **Polling Updates** - Auto-refresh every 5 seconds (no WebSocket needed)
 - ✅ **Zero Config** - Works out of the box
-
-#### How Polling Works
-
-The admin dashboard automatically polls `/api/users/poll` every 5 seconds:
-
-```javascript
-// Checks for new users since last poll
-GET /api/users/poll?since=1733616000000
-
-// Response
-{
-  "users": [...],
-  "timestamp": 1733616005000,
-  "hasUpdates": true
-}
-```
-
-When `hasUpdates: true`, the dashboard automatically refreshes the user table.
-
-#### Bandwidth Usage
-
-- Poll request: ~1KB
-- Polls per hour: 720 (every 5 seconds)
-- Monthly bandwidth: ~500MB
-- **Result**: Well within Vercel free tier (100GB/month) 🎉
 
 #### Troubleshooting
 
@@ -373,10 +338,10 @@ When `hasUpdates: true`, the dashboard automatically refreshes the user table.
 - Check API key is active in Google AI Studio
 - Review Vercel function logs
 
-**Issue: Admin panel not updating**
-- Check browser console for polling errors
-- Verify `/api/users/poll` endpoint returns data
-- Ensure MongoDB timestamps are enabled
+**Issue: Admin panel not loading data**
+- Check browser console for errors
+- Verify `/api/users` endpoint returns data
+- Ensure MongoDB connection is active
 
 ---
 

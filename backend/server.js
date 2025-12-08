@@ -38,32 +38,6 @@ app.use("/api/users", authRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/sets", setsRoutes);
 
-// Polling endpoint for user updates (Vercel-compatible)
-let lastUpdateTimestamp = Date.now();
-app.get("/api/users/poll", async (req, res) => {
-  try {
-    const User = require("./models/authModel");
-    const since = req.query.since || 0;
-    
-    // Get users updated since last poll
-    const users = await User.find({
-      $or: [
-        { joinedOn: { $gte: new Date(parseInt(since)) } },
-        { updatedAt: { $gte: new Date(parseInt(since)) } }
-      ]
-    }).sort({ joinedOn: -1 });
-    
-    res.json({
-      users,
-      timestamp: Date.now(),
-      hasUpdates: users.length > 0
-    });
-  } catch (error) {
-    console.error("Poll error:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
 // Serve static files (HTML, CSS, JS)
 app.use(express.static("../frontend"));
 

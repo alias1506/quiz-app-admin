@@ -852,46 +852,10 @@
         // Initial data fetch
         fetchUsers();
         
-        // Polling mechanism for live updates (Vercel-compatible)
-        let lastPollTimestamp = Date.now();
-        let pollInterval = null;
-        
-        function startPolling() {
-          // Poll every 5 seconds for updates
-          pollInterval = setInterval(async () => {
-            try {
-              const res = await fetch(`/api/users/poll?since=${lastPollTimestamp}`, {
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-Session-ID": sessionCheck.sessionData?.sessionId || "",
-                }
-              });
-              
-              if (res.ok) {
-                const data = await res.json();
-                if (data.hasUpdates) {
-                  console.log('✅ New updates detected, refreshing...');
-                  fetchUsers();
-                }
-                lastPollTimestamp = data.timestamp;
-              }
-            } catch (error) {
-              // Silently handle polling errors
-              console.log('⚠️ Poll error (will retry):', error.message);
-            }
-          }, 5000); // Poll every 5 seconds
-        }
-        
-        // Start polling
-        startPolling();
-        
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
           if (countdownInterval) {
             clearInterval(countdownInterval);
-          }
-          if (pollInterval) {
-            clearInterval(pollInterval);
           }
         });
       });
