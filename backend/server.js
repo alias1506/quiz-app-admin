@@ -26,8 +26,8 @@ mongoose
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  res.json({ 
-    status: "ok", 
+  res.json({
+    status: "ok",
     message: "Server is running",
     timestamp: new Date().toISOString()
   });
@@ -38,21 +38,20 @@ app.use("/api/users", authRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/sets", setsRoutes);
 
-// Serve static files (HTML, CSS, JS)
-app.use(express.static("../frontend"));
+// Serve static files (HTML, CSS, JS) - Absolute path for reliability
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Error:", err);
-  res.status(500).json({ 
-    message: "Internal server error", 
-    error: process.env.NODE_ENV === "development" ? err.message : undefined 
+  res.status(500).json({
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined
   });
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-  console.log(`📁 Serving frontend from: ${require('path').resolve(__dirname, '../frontend')}`);
-  console.log(`🔌 Admin panel: http://localhost:${PORT}`);
+  console.log(`🚀 Admin Server running on port ${PORT}`);
+  console.log(`📁 Serving frontend from: ${path.join(__dirname, '../frontend')}`);
 });
