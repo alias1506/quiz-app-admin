@@ -104,7 +104,7 @@
         z-index: 1040;
       }
     </style>
-    <script defer src="assets/js/sessionManager.js"></script>
+    <script src="assets/js/sessionManager.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", (event) => {
         // Your code to show the modal goes here
@@ -1104,6 +1104,27 @@
           }
         }
 
+        // ✅ API URL Configuration - Auto-detect environment
+        const API_URL = (() => {
+          const hostname = window.location.hostname;
+          const port = window.location.port;
+          
+          // If we're on localhost/127.0.0.1
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            // If already on port 5001, use relative URLs (served by backend)
+            if (port === '5001') {
+              return '';
+            }
+            // Otherwise (different port or file://), use full URL
+            return 'http://localhost:5001';
+          }
+          
+          // Production (Vercel) - use relative URLs
+          return '';
+        })();
+        
+
+
         // Session-aware fetch
         async function sessionFetch(url, options = {}) {
           const sessionCheck = sessionManager.checkSession();
@@ -1123,7 +1144,7 @@
               ...options.headers,
             },
           };
-          const response = await fetch(url, fetchOptions);
+          const response = await fetch(`${API_URL}${url}`, fetchOptions);
           if (response.status === 401 || response.status === 403) {
             Swal.fire({
               icon: "warning",
@@ -1817,7 +1838,7 @@
               // Delete questions one by one
               for (const questionId of questionIds) {
                 try {
-                  const res = await fetch(`/api/questions/${questionId}`, {
+                  const res = await fetch(`${API_URL}/api/questions/${questionId}`, {
                     method: "DELETE",
                   });
 
@@ -1877,7 +1898,7 @@
 
           if (result.isConfirmed) {
             try {
-              const res = await fetch(`/api/questions/${questionId}`, {
+              const res = await fetch(`${API_URL}/api/questions/${questionId}`, {
                 method: "DELETE",
               });
 
@@ -1971,7 +1992,7 @@
               // Delete sets one by one
               for (const setId of setIds) {
                 try {
-                  const res = await fetch(`/api/sets/${setId}`, {
+                  const res = await fetch(`${API_URL}/api/sets/${setId}`, {
                     method: "DELETE",
                   });
 
@@ -2029,7 +2050,7 @@
 
           if (result.isConfirmed) {
             try {
-              const res = await fetch(`/api/sets/${setId}`, {
+              const res = await fetch(`${API_URL}/api/sets/${setId}`, {
                 method: "DELETE",
               });
 
@@ -2294,7 +2315,7 @@
             };
 
             try {
-              const res = await fetch(`/api/questions/${id}`, {
+              const res = await fetch(`${API_URL}/api/questions/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -2344,7 +2365,7 @@
             }
 
             try {
-              const res = await fetch(`/api/sets/${id}`, {
+              const res = await fetch(`${API_URL}/api/sets/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: updatedName }),
@@ -2390,7 +2411,7 @@
             }
 
             try {
-              const res = await fetch("/api/sets", {
+              const res = await fetch(`${API_URL}/api/sets`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: setName }),
@@ -2619,7 +2640,7 @@
             };
 
             try {
-              const res = await fetch("/api/questions", {
+              const res = await fetch(`${API_URL}/api/questions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),

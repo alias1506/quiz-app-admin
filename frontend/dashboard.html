@@ -56,7 +56,7 @@
         }
       }
     </style>
-    <script defer src="assets/js/sessionManager.js"></script>
+    <script src="assets/js/sessionManager.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", (event) => {
         // Your code to show the modal goes here
@@ -65,16 +65,8 @@
           const sessionCheck = sessionManager.checkSession();
 
           if (!sessionCheck.valid) {
-            console.log("Session invalid:", sessionCheck.reason);
             sessionManager.redirectToLogin();
             return;
-          }
-
-          // Optional: Log session info for debugging
-          const userInfo = sessionManager.getUserInfo();
-          if (userInfo) {
-            console.log("User authenticated:", userInfo.userId);
-            console.log("Session ID:", userInfo.sessionId);
           }
         })();
       });
@@ -296,8 +288,6 @@
     <!-- Javascript -->
     <script src="assets/plugins/popper.min.js"></script>
     <script src="assets/plugins/bootstrap/js/bootstrap.min.js"></script>
-    <script src="assets/plugins/chart.js/chart.min.js"></script>
-    <script src="assets/js/index-charts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="assets/js/main.js"></script>
 
@@ -382,23 +372,41 @@
           }, 1000);
         }
 
+        // ✅ API URL Configuration - Auto-detect environment
+        const API_URL = (() => {
+          const hostname = window.location.hostname;
+          const port = window.location.port;
+          
+          // If we're on localhost/127.0.0.1
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            // If already on port 5001, use relative URLs (served by backend)
+            if (port === '5001') {
+              return '';
+            }
+            // Otherwise (different port or file://), use full URL
+            return 'http://localhost:5001';
+          }
+          
+          // Production (Vercel) - use relative URLs
+          return '';
+        })();
+        
         async function fetchUsers() {
           // Show loader row
           const loader = document.getElementById("usersLoader");
           if (loader) loader.style.display = "table-row";
           
           try {
-            // Check session before making API call
+            // Check session validity
             const sessionCheck = sessionManager.checkSession();
             if (!sessionCheck.valid) {
-              sessionManager.redirectToLogin();
+              sessionManager.logout();
               return;
             }
 
-            const res = await fetch("/api/users", {
+            const res = await fetch(`${API_URL}/api/users`, {
               headers: {
                 "Content-Type": "application/json",
-                // Add session ID to headers if needed for backend validation
                 "X-Session-ID": sessionCheck.sessionData?.sessionId || "",
               },
             });
@@ -416,9 +424,13 @@
               return;
             }
 
+            if (!res.ok) {
+              throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
             users = await res.json();
 
-            // ✅ Sort users: oldest first (latest last)
+            // Sort users: oldest first (latest last)
             users.sort((a, b) => {
               const dateA = new Date(a.joinedOn || a.createdAt || 0);
               const dateB = new Date(b.joinedOn || b.createdAt || 0);
@@ -430,23 +442,34 @@
             updateEntryCount();
           } catch (err) {
             console.error("Error fetching users:", err);
+            console.error("Error name:", err.name);
+            console.error("Error message:", err.message);
+            console.error("API_URL:", API_URL);
+            console.error("Full URL:", `${API_URL}/api/users`);
             
             // Hide loader on error
             const loader = document.getElementById("usersLoader");
             if (loader) loader.style.display = "none";
 
-            // Check if it's a network error that might indicate session issues
-            if (err.name === "TypeError" && err.message.includes("fetch")) {
-              Swal.fire({
-                icon: "error",
-                title: "Connection Error",
-                text: "Unable to connect to server. Please check your connection and try again.",
-                confirmButtonText: "OK",
-              });
+            // Show detailed error message
+            let errorMessage = "Failed to load users. ";
+            if (err.message.includes("Failed to fetch") || err.name === "TypeError") {
+              errorMessage = "Unable to connect to server. Please check your connection and try again.";
+            } else if (err.message.includes("HTTP error")) {
+              errorMessage = `Server error: ${err.message}`;
+            } else {
+              errorMessage = err.message || "Unknown error occurred";
             }
 
+            Swal.fire({
+              icon: "error",
+              title: "Connection Error",
+              text: errorMessage,
+              confirmButtonText: "OK",
+            });
+
             tableBody.innerHTML =
-              '<tr><td colspan="8" class="text-danger text-center">Failed to load users.</td></tr>';
+              '<tr><td colspan="10" class="text-danger text-center">Failed to load users. Check console for details.</td></tr>';
           } finally {
             // Hide loader row
             const loader = document.getElementById("usersLoader");
@@ -658,7 +681,7 @@
             try {
               sessionManager.updateLastActivity();
 
-              const res = await fetch(`/api/users/${id}`, {
+              const res = await fetch(`${API_URL}/api/users/${id}`, {
                 method: "DELETE",
                 headers: {
                   "Content-Type": "application/json",
@@ -775,7 +798,7 @@
               // Delete users one by one
               for (const userId of userIds) {
                 try {
-                  const res = await fetch(`/api/users/${userId}`, {
+                  const res = await fetch(`${API_URL}/api/users/${userId}`, {
                     method: "DELETE",
                     headers: {
                       "Content-Type": "application/json",
@@ -843,12 +866,6 @@
 
         // Display user info from session
         const userInfo = sessionManager.getUserInfo();
-        if (userInfo) {
-          console.log("Current user:", userInfo.userId);
-          console.log("Login time:", userInfo.loginTime);
-          console.log("Session ID:", userInfo.sessionId);
-        }
-
         // Initial data fetch
         fetchUsers();
         
