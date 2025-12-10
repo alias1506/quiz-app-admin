@@ -48,6 +48,34 @@
       color: #c82333;
     }
 
+    /* Custom Spinner Animation - Ensure it always spins */
+    @keyframes spinner-rotate {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spinner-border {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      vertical-align: text-bottom;
+      border-radius: 50%;
+      animation: spinner-rotate 0.75s linear infinite !important;
+    }
+
+    /* Override for custom colored spinners */
+    .spinner-border[style*="color"] {
+      border: 0.25em solid transparent !important;
+      border-top-color: currentColor !important;
+      border-left-color: currentColor !important;
+      border-bottom-color: currentColor !important;
+    }
+
     .fixed-pagination-above-footer {
       position: fixed;
       bottom: 50px;
@@ -325,6 +353,18 @@
     </footer>
   </div>
 
+  <!-- Full-page Loader for Multi-delete Operations -->
+  <div id="fullPageLoader"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; overflow: hidden;">
+    <div class="text-center">
+      <div class="spinner-border" role="status"
+        style="width: 4rem; height: 4rem; color: #3b82f6; border-color: #3b82f6;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3 fs-5" style="color: #ffffff !important; font-weight: 500;">Deleting... Please wait</p>
+    </div>
+  </div>
+
   <!-- Add Question Modal -->
   <div class="modal fade" id="AddQuestionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="AddQuestionModalLabel" aria-hidden="true">
@@ -486,7 +526,19 @@
   <!-- Show Sets Modal -->
   <div class="modal fade" id="ShowSetsModal" tabindex="-1" aria-labelledby="ShowSetsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
+      <div class="modal-content" style="position: relative;">
+        <!-- Loader Overlay for Multi-delete -->
+        <div id="setsModalLoader"
+          style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 1050; justify-content: center; align-items: center;">
+          <div class="text-center">
+            <div class="spinner-border" role="status"
+              style="width: 3rem; height: 3rem; color: #3b82f6; border-width: 0.3em;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3" style="color: #333; font-weight: 500;">Deleting sets... Please wait</p>
+          </div>
+        </div>
+
         <div class="modal-header">
           <h5 class="modal-title" id="ShowSetsModalLabel">All Sets</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -551,7 +603,7 @@
   <!-- AI Mode Modal -->
   <div class="modal fade" id="AIModeModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="AIModeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
       <div class="modal-content">
         <div class="modal-header">
           <h1 class="modal-title fs-5" id="AIModeModalLabel">
@@ -559,7 +611,20 @@
           </h1>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="position: relative; min-height: 500px;">
+          <!-- Loader Overlay (shown during AI generation) -->
+          <div id="aiGenerationLoader"
+            style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 1000; justify-content: center; align-items: center;">
+            <div class="text-center">
+              <div class="spinner-border" role="status"
+                style="width: 4rem; height: 4rem; color: #3b82f6; border-width: 0.3em;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-3 text-muted fs-5">🤖 Generating questions... Please wait</p>
+              <p class="text-muted"><small>This may take a few moments</small></p>
+            </div>
+          </div>
+
           <!-- Nav tabs -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <ul class="nav nav-tabs mb-0 flex-grow-1" id="aiModeTabs" role="tablist" style="border-bottom: none;">
@@ -651,7 +716,8 @@
             <div class="tab-pane fade" id="generated" role="tabpanel" aria-labelledby="generated-tab">
 
               <!-- Generated Questions will appear here -->
-              <div id="generatedQuestionsContainer" style="max-height: 400px; overflow-y: auto;">
+              <div id="generatedQuestionsContainer" style="min-height: 400px; max-height: 400px; overflow-y: auto;">
+                <!-- Empty state -->
                 <div class="text-center text-muted py-5" id="noGeneratedQuestions">
                   <i class="fas fa-magic fa-3x mb-3"></i>
                   <p>No questions generated yet. Use the "Generate Questions" button to create questions.</p>
@@ -659,22 +725,10 @@
 
                 <!-- Generated Questions Table -->
                 <div id="generatedQuestionsTable" style="display: none;">
-                  <!-- Bulk Actions -->
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteGeneratedBtn"
-                      style="display: none;">
-                      <i class="fas fa-trash"></i> Delete Selected (<span id="selectedGeneratedCount">0</span>)
-                    </button>
-                  </div>
-
                   <div class="table-responsive">
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>
-                            <input type="checkbox" id="selectAllGenerated" class="form-check-input"
-                              style="cursor: pointer;" onchange="toggleSelectAllGenerated(this)">
-                          </th>
                           <th>#</th>
                           <th>Question</th>
                           <th>Options</th>
@@ -877,7 +931,7 @@
           optionsArray
             .map(
               (opt) =>
-                `<li style="margin-bottom:2px;">${escapeHtml(opt)}</li>`
+                `<li style="margin-bottom:2px;">${formatScientificText(escapeHtml(opt))}</li>`
             )
             .join("") +
           "</ol>"
@@ -1204,6 +1258,31 @@
         entryCount.textContent = `Showing ${start} to ${end} of ${filteredQuestions.length} entries`;
       }
 
+      // Format scientific/mathematical text with superscripts and subscripts
+      function formatScientificText(text) {
+        if (!text) return text;
+
+        // Convert powers (^) to superscript
+        // Matches patterns like: x^2, 10^-3, (a+b)^2, etc.
+        text = text.replace(/\^(-?\d+|\([^)]+\)|[a-zA-Z])/g, (match, power) => {
+          return `<sup>${power}</sup>`;
+        });
+
+        // Convert chemical formulas - numbers after elements to subscript
+        // Matches: H2O, CO2, H2SO4, Ca(OH)2, etc.
+        text = text.replace(/([A-Z][a-z]?)(\d+)/g, (match, element, number) => {
+          return `${element}<sub>${number}</sub>`;
+        });
+
+        // Handle numbers in parentheses like Ca(OH)2
+        text = text.replace(/\(([A-Z][a-z]?(?:<sub>\d+<\/sub>)?)+\)(\d+)/g, (match, inner, number) => {
+          const paren = match.substring(0, match.lastIndexOf(')') + 1);
+          return `${paren}<sub>${number}</sub>`;
+        });
+
+        return text;
+      }
+
       function renderTable() {
         if (!questionsTableBody) return;
 
@@ -1254,8 +1333,8 @@
           const optionsHtml = renderOptionsList(optionsArray);
 
           const globalIndex = startIndex + idx + 1;
-          const escapedQuestion = escapeHtml(q.question || "");
-          const escapedCorrectAnswer = escapeHtml(q.correctAnswer || "");
+          const escapedQuestion = formatScientificText(escapeHtml(q.question || ""));
+          const escapedCorrectAnswer = formatScientificText(escapeHtml(q.correctAnswer || ""));
 
           questionsTableBody.innerHTML += `
         <tr>
@@ -1511,6 +1590,13 @@
 
         if (result.isConfirmed) {
           try {
+            // Show full-page loader and prevent body scroll
+            const fullPageLoader = document.getElementById("fullPageLoader");
+            if (fullPageLoader) {
+              fullPageLoader.style.display = "flex";
+              document.body.style.overflow = "hidden";
+            }
+
             sessionManager.updateLastActivity();
 
             let successCount = 0;
@@ -1668,6 +1754,10 @@
 
         if (result.isConfirmed) {
           try {
+            // Show modal overlay loader instead of full-page
+            const setsModalLoader = document.getElementById("setsModalLoader");
+            if (setsModalLoader) setsModalLoader.style.display = "flex";
+
             sessionManager.updateLastActivity();
 
             let successCount = 0;
@@ -1703,7 +1793,7 @@
                 showConfirmButton: false,
                 timer: 2000,
               });
-                
+
               // Reload page after successful deletion
               window.location.reload();
             } else {
@@ -2440,6 +2530,17 @@
             tab.show();
           }
 
+          // Clear previously generated questions before generating new ones
+          generatedQuestions = [];
+          displayGeneratedQuestions();
+
+          // Show modal overlay loader and disable generate button
+          const aiLoader = document.getElementById("aiGenerationLoader");
+          if (aiLoader) {
+            aiLoader.style.display = "flex";
+          }
+          generateQuestionsBtn.disabled = true;
+
           // Initialize badge counter
           const countBadge = document.getElementById('generatedCountBadge');
           if (countBadge) {
@@ -2463,7 +2564,6 @@
             const data = await res.json();
 
             // Save and display questions one by one with progress
-            generatedQuestions = [];
             let savedCount = 0;
 
             for (let i = 0; i < data.questions.length; i++) {
@@ -2507,6 +2607,11 @@
             // Reload questions in main table after all saved
             await loadQuestions();
 
+            // Hide loader and re-enable button
+            const aiLoader = document.getElementById("aiGenerationLoader");
+            if (aiLoader) aiLoader.style.display = "none";
+            generateQuestionsBtn.disabled = false;
+
             // Show Clear button
             const clearBtn = document.getElementById('clearGeneratedViewBtn');
             if (clearBtn) {
@@ -2523,6 +2628,11 @@
 
           } catch (err) {
             console.error("Error generating questions:", err);
+
+            // Hide loader and re-enable button on error
+            const aiLoader = document.getElementById("aiGenerationLoader");
+            if (aiLoader) aiLoader.style.display = "none";
+            generateQuestionsBtn.disabled = false;
 
             // Hide badge on error
             const countBadge = document.getElementById('generatedCountBadge');
@@ -2565,7 +2675,7 @@
           const optionsHtml = q.options
             .map(
               (opt, i) =>
-                `<div class="mb-1" style="color: #000;">${i + 1}. ${escapeHtml(opt)}</div>`
+                `<div class="mb-1" style="color: #000;">${i + 1}. ${formatScientificText(escapeHtml(opt))}</div>`
             )
             .join("");
 
@@ -2574,18 +2684,10 @@
 
           tbody.innerHTML += `
               <tr>
-                <td>
-                  <input 
-                    type="checkbox" 
-                    class="form-check-input generated-checkbox" 
-                    style="cursor: pointer;"
-                    data-index="${index}"
-                    onchange="updateBulkDeleteGeneratedButton()">
-                </td>
                 <td>${index + 1}</td>
-                <td class="text-wrap" style="max-width: 300px;">${escapeHtml(q.question)}</td>
+                <td class="text-wrap" style="max-width: 300px;">${formatScientificText(escapeHtml(q.question))}</td>
                 <td class="text-wrap" style="max-width: 250px; font-size: 0.9em;">${optionsHtml}</td>
-                <td><strong class="text-success">${escapeHtml(q.correctAnswer)}</strong></td>
+                <td><strong class="text-success">${formatScientificText(escapeHtml(q.correctAnswer))}</strong></td>
                 <td><span class="badge ${setBadgeClass}">${setDisplay}</span></td>
                 <td>
                   <a href="javascript:void(0);" class="px-2 text-primary" onclick="editGeneratedQuestion(${index})" title="Edit">
@@ -2598,13 +2700,6 @@
               </tr>
             `;
         });
-
-        // Reset select all checkbox
-        const selectAllCheckbox = document.getElementById('selectAllGenerated');
-        if (selectAllCheckbox) {
-          selectAllCheckbox.checked = false;
-        }
-        updateBulkDeleteGeneratedButton();
       }
 
       // Toggle select all generated questions
