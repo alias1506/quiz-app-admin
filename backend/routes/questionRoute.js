@@ -17,10 +17,10 @@ router.get("/", async (req, res) => {
         ...question.toObject(),
         set: setInfo
           ? {
-              _id: setInfo._id,
-              name: setInfo.name,
-              isActive: setInfo.isActive,
-            }
+            _id: setInfo._id,
+            name: setInfo.name,
+            isActive: setInfo.isActive,
+          }
           : null,
       });
     }
@@ -142,10 +142,10 @@ router.post("/", async (req, res) => {
           ...savedQuestion.toObject(),
           set: setInfo
             ? {
-                _id: setInfo._id,
-                name: setInfo.name,
-                isActive: setInfo.isActive,
-              }
+              _id: setInfo._id,
+              name: setInfo.name,
+              isActive: setInfo.isActive,
+            }
             : null,
         });
       }
@@ -212,10 +212,10 @@ router.post("/", async (req, res) => {
         ...saved.toObject(),
         set: setInfo
           ? {
-              _id: setInfo._id,
-              name: setInfo.name,
-              isActive: setInfo.isActive,
-            }
+            _id: setInfo._id,
+            name: setInfo.name,
+            isActive: setInfo.isActive,
+          }
           : null,
       };
 
@@ -293,10 +293,10 @@ router.put("/:id", async (req, res) => {
       ...updated.toObject(),
       set: setInfo
         ? {
-            _id: setInfo._id,
-            name: setInfo.name,
-            isActive: setInfo.isActive,
-          }
+          _id: setInfo._id,
+          name: setInfo.name,
+          isActive: setInfo.isActive,
+        }
         : null,
     };
 
@@ -376,10 +376,10 @@ router.delete("/:id", async (req, res) => {
       ...deleted.toObject(),
       set: setInfo
         ? {
-            _id: setInfo._id,
-            name: setInfo.name,
-            isActive: setInfo.isActive,
-          }
+          _id: setInfo._id,
+          name: setInfo.name,
+          isActive: setInfo.isActive,
+        }
         : null,
     };
 
@@ -419,7 +419,7 @@ router.delete("/by-set/:setId", async (req, res) => {
 });
 
 // @route   POST /api/questions/generate-ai
-// @desc    Generate questions using Gemini AI
+// @desc    Generate questions using Groq AI (FREE, fast, generous limits)
 router.post("/generate-ai", async (req, res) => {
   try {
     const { keywords, setId, numQuestions } = req.body;
@@ -433,23 +433,19 @@ router.post("/generate-ai", async (req, res) => {
       return res.status(404).json({ message: "Set not found" });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: "Gemini API key not configured" });
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({ message: "Groq API key not configured. Please set GROQ_API_KEY in .env file" });
     }
 
     const Question = require("../models/questionModel");
     const existingQuestions = await Question.find({ set: setId }).select('question');
     const existingQuestionsText = existingQuestions.map(q => q.question).join('\n- ');
 
-    const { GoogleGenerativeAI } = require("@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    
     let existingQuestionsPrompt = '';
     if (existingQuestions.length > 0) {
       existingQuestionsPrompt = `\n\nIMPORTANT: Avoid generating questions similar to these existing questions in the database:\n- ${existingQuestionsText}\n\nGenerate completely NEW and DIFFERENT questions that are NOT duplicates or paraphrases of the above.`;
     }
-    
+
     const prompt = `Generate ${numQuestions} multiple choice quiz questions based on these keywords: ${keywords}${existingQuestionsPrompt}
 
 For each question, provide:
@@ -473,10 +469,26 @@ Important:
 - Make questions clear and educational
 - Return ONLY the JSON array, no other text`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
+    // Use Groq API
+    const Groq = require("groq-sdk");
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      model: "llama-3.3-70b-versatile", // Best for structured output (JSON)
+      temperature: 0.7,
+      max_completion_tokens: 4000,
+      top_p: 1,
+      stream: false, // We need full response to parse JSON
+    });
+
+    const text = chatCompletion.choices[0]?.message?.content || "";
+
     // Extract JSON from response (handle markdown code blocks if present)
     let jsonText = text.trim();
     if (jsonText.startsWith('```json')) {
@@ -484,7 +496,7 @@ Important:
     } else if (jsonText.startsWith('```')) {
       jsonText = jsonText.replace(/```\n?/g, '');
     }
-    
+
     let generatedQuestions = JSON.parse(jsonText);
 
     // Validate generated questions
@@ -492,79 +504,16 @@ Important:
       return res.status(500).json({ message: "AI generated invalid response" });
     }
 
-    // Filter out duplicate questions and regenerate if needed
+    // Filter out duplicate questions
     let existingQuestionsLower = existingQuestions.map(q => q.question.toLowerCase().trim());
     let allGeneratedQuestionsLower = [];
     let uniqueQuestions = [];
-    let attempts = 0;
-    const maxAttempts = 5;
 
-    // First batch: filter initial generated questions
     for (const q of generatedQuestions) {
       const questionLower = q.question.toLowerCase().trim();
       if (!existingQuestionsLower.includes(questionLower) && !allGeneratedQuestionsLower.includes(questionLower)) {
         uniqueQuestions.push(q);
         allGeneratedQuestionsLower.push(questionLower);
-      }
-    }
-
-    // Regenerate duplicates until we have the required number
-    while (uniqueQuestions.length < numQuestions && attempts < maxAttempts) {
-      attempts++;
-      const needed = numQuestions - uniqueQuestions.length;
-
-      // Update existing questions list to include newly generated ones
-      const allExistingText = [...existingQuestionsText.split('\n- '), ...allGeneratedQuestionsLower].join('\n- ');
-      
-      const retryPrompt = `Generate ${needed} multiple choice quiz questions based on these keywords: ${keywords}
-
-CRITICAL: Do NOT generate questions similar to these existing questions:
-- ${allExistingText}
-
-Generate COMPLETELY NEW and UNIQUE questions that are DIFFERENT from the above.
-
-For each question, provide:
-1. A clear, concise question
-2. Exactly 4 options
-3. Mark the correct answer
-
-Format your response as a JSON array with this structure:
-[
-  {
-    "question": "Question text here?",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-    "correctAnswer": "The exact text of the correct option"
-  }
-]
-
-Important:
-- Generate exactly ${needed} questions
-- Each question must have exactly 4 options
-- The correctAnswer must match one of the options exactly
-- Make questions clear and educational
-- Return ONLY the JSON array, no other text`;
-
-      const retryResult = await model.generateContent(retryPrompt);
-      const retryResponse = await retryResult.response;
-      const retryText = retryResponse.text();
-      
-      let retryJsonText = retryText.trim();
-      if (retryJsonText.startsWith('```json')) {
-        retryJsonText = retryJsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      } else if (retryJsonText.startsWith('```')) {
-        retryJsonText = retryJsonText.replace(/```\n?/g, '');
-      }
-
-      const retryQuestions = JSON.parse(retryJsonText);
-      
-      // Add only unique questions from retry
-      for (const q of retryQuestions) {
-        const questionLower = q.question.toLowerCase().trim();
-        if (!existingQuestionsLower.includes(questionLower) && !allGeneratedQuestionsLower.includes(questionLower)) {
-          uniqueQuestions.push(q);
-          allGeneratedQuestionsLower.push(questionLower);
-          if (uniqueQuestions.length >= numQuestions) break;
-        }
       }
     }
 
@@ -582,15 +531,16 @@ Important:
       }
     }));
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       questions: formattedQuestions,
-      count: formattedQuestions.length
+      count: formattedQuestions.length,
+      aiProvider: 'Groq'
     });
   } catch (err) {
     console.error("Error generating questions:", err.message);
-    res.status(500).json({ 
-      message: "Failed to generate questions", 
+    res.status(500).json({
+      message: "Failed to generate questions",
       error: err.message
     });
   }
@@ -609,16 +559,16 @@ router.post("/save-generated", async (req, res) => {
     // Save all questions
     const savedQuestions = await Question.insertMany(questions);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: `Successfully saved ${savedQuestions.length} questions`,
       count: savedQuestions.length
     });
   } catch (err) {
     console.error("Error saving generated questions:", err);
-    res.status(500).json({ 
-      message: "Failed to save questions", 
-      error: err.message 
+    res.status(500).json({
+      message: "Failed to save questions",
+      error: err.message
     });
   }
 });
