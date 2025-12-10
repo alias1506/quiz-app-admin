@@ -1,412 +1,645 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Portal - Bootstrap 5 Admin Dashboard Template For Developers</title>
 
-    <!-- Meta -->
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <title>Portal - Bootstrap 5 Admin Dashboard Template For Developers</title>
 
-    <meta
-      name="description"
-      content="Portal - Bootstrap 5 Admin Dashboard Template For Developers"
-    />
-    <meta name="author" content="Xiaoying Riley at 3rd Wave Media" />
-    <link rel="shortcut icon" href="assets/images/club-logo.jpg" />
+  <!-- Meta -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- FontAwesome JS-->
-    <script defer src="assets/plugins/fontawesome/js/all.min.js"></script>
+  <meta name="description" content="Portal - Bootstrap 5 Admin Dashboard Template For Developers" />
+  <meta name="author" content="Xiaoying Riley at 3rd Wave Media" />
+  <link rel="shortcut icon" href="assets/images/club-logo.jpg" />
 
-    <!-- App CSS -->
-    <link id="theme-style" rel="stylesheet" href="assets/css/portal.css" />
-    <link rel="stylesheet" href="assets/css/style.css" />
+  <!-- FontAwesome JS-->
+  <script defer src="assets/plugins/fontawesome/js/all.min.js"></script>
 
-    <!-- ✅ Fixed Pagination Styles -->
-    <style>
+  <!-- App CSS -->
+  <link id="theme-style" rel="stylesheet" href="assets/css/portal.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+
+  <!-- ✅ Fixed Pagination Styles -->
+  <style>
+    .fixed-pagination-above-footer {
+      position: fixed;
+      bottom: 50px;
+      /* Adjust to match your footer height */
+      left: 0;
+      right: 0;
+      z-index: 1020;
+      background: white;
+      border-top: 1px solid #dee2e6;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination-spacer-above-footer {
+      height: 120px;
+      /* Footer height (60px) + Pagination height (60px) */
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .fixed-pagination-above-footer .d-flex {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 0;
+      }
+
       .fixed-pagination-above-footer {
-        position: fixed;
-        bottom: 50px; /* Adjust to match your footer height */
-        left: 0;
-        right: 0;
-        z-index: 1020;
-        background: white;
-        border-top: 1px solid #dee2e6;
-        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        bottom: 60px;
       }
 
       .pagination-spacer-above-footer {
-        height: 120px; /* Footer height (60px) + Pagination height (60px) */
+        height: 140px;
       }
+    }
+  </style>
+  <script src="assets/js/sessionManager.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", (event) => {
+      // Your code to show the modal goes here
+      (function () {
+        // Check session using SessionManager
+        const sessionCheck = sessionManager.checkSession();
 
-      /* Mobile responsiveness */
-      @media (max-width: 768px) {
-        .fixed-pagination-above-footer .d-flex {
-          flex-direction: column;
-          gap: 8px;
-          padding: 8px 0;
+        if (!sessionCheck.valid) {
+          sessionManager.redirectToLogin();
+          return;
         }
+      })();
+    });
+  </script>
+</head>
 
-        .fixed-pagination-above-footer {
-          bottom: 60px;
-        }
-
-        .pagination-spacer-above-footer {
-          height: 140px;
-        }
-      }
-    </style>
-    <script src="assets/js/sessionManager.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", (event) => {
-        // Your code to show the modal goes here
-        (function () {
-          // Check session using SessionManager
-          const sessionCheck = sessionManager.checkSession();
-
-          if (!sessionCheck.valid) {
-            sessionManager.redirectToLogin();
-            return;
-          }
-        })();
-      });
-    </script>
-  </head>
-
-  <body class="app">
-    <header class="app-header fixed-top">
-      <div class="app-header-inner">
-        <div class="container-fluid py-2">
-          <div class="app-header-content">
-            <div class="row justify-content-between align-items-center">
-              <div class="col-auto">
-                <a
-                  id="sidepanel-toggler"
-                  class="sidepanel-toggler d-inline-block d-xl-none"
-                  href="#"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    viewBox="0 0 30 30"
-                    role="img"
-                  >
-                    <title>Menu</title>
-                    <path
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-miterlimit="10"
-                      stroke-width="2"
-                      d="M4 7h22M4 15h22M4 23h22"
-                    ></path>
-                  </svg>
-                </a>
-              </div>
-
-              <div class="search-mobile-trigger d-sm-none col">
-                <i
-                  class="search-mobile-trigger-icon fa-solid fa-magnifying-glass"
-                ></i>
-              </div>
-
-              <div class="app-utilities col-auto">
-                <div class="app-utility-item app-user-dropdown dropdown">
-                  <a
-                    class="dropdown-toggle"
-                    id="user-dropdown-toggle"
-                    data-bs-toggle="dropdown"
-                    href="#"
-                    role="button"
-                    aria-expanded="false"
-                  >
-                    <img src="assets/images/club-logo.jpg" alt="user profile" />
-                  </a>
-                  <ul
-                    class="dropdown-menu"
-                    aria-labelledby="user-dropdown-toggle"
-                  >
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="javascript:void(0);"
-                        id="logout"
-                        >Log Out</a
-                      >
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <!--//row-->
-          </div>
-          <!--//app-header-content-->
-        </div>
-      </div>
-
-      <div id="app-sidepanel" class="app-sidepanel">
-        <div id="sidepanel-drop" class="sidepanel-drop"></div>
-        <div class="sidepanel-inner d-flex flex-column">
-          <a href="#" id="sidepanel-close" class="sidepanel-close d-xl-none"
-            >&times;</a
-          >
-          <div class="app-branding">
-            <a class="app-logo" href="dashboard.html">
-              <img
-                class="logo-icon me-2"
-                src="assets/images/club-logo.jpg"
-                alt="logo"
-                style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"
-              />
-              <span class="logo-text">QUIZ ADMIN</span>
-            </a>
-          </div>
-
-          <nav id="app-nav-main" class="app-nav app-nav-main flex-grow-1">
-            <ul class="app-menu list-unstyled accordion" id="menu-accordion">
-              <li class="nav-item">
-                <a class="nav-link active" href="dashboard.html">
-                  <span class="nav-icon">
-                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-house-door" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <path fill-rule="evenodd" d="M7.646 1.146a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 .146.354v7a.5.5 0 0 1-.5.5H9.5a.5.5 0 0 1-.5-.5v-4H7v4a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5v-7a.5.5 0 0 1 .146-.354l6-6zM2.5 7.707V14H6v-4a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v4h3.5V7.707L8 2.207l-5.5 5.5z"/>
-                    </svg>
-                  </span>
-                  <span class="nav-link-text">Dashboard</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="allQuestions.html">
-                  <span class="nav-icon">
-                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-question-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                      <path d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
-                    </svg>
-                  </span>
-                  <span class="nav-link-text">Questions</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </div>
-    </header>
-
-    <div class="app-wrapper">
-      <div class="px-5 py-3">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h1 class="mb-0">Users</h1>
-          <button 
-            id="bulkDeleteBtn" 
-            class="btn btn-danger" 
-            disabled
-            onclick="deleteSelectedUsers()">
-            <i class="fas fa-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
-          </button>
-        </div>
-
-        <table class="table table-striped mb-0" id="userTable">
-          <thead>
-            <tr>
-              <th scope="col">
-                <input 
-                  type="checkbox" 
-                  id="selectAll" 
-                  class="form-check-input" 
-                  style="cursor: pointer;"
-                  onchange="toggleSelectAll(this)">
-              </th>
-              <th scope="col">#</th>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Score</th>
-              <th scope="col">Attempt #</th>
-              <th scope="col">Date/Time</th>
-              <th scope="col">Attempts</th>
-              <th scope="col">Status</th>
-              <th scope="col">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Loader Row -->
-            <tr id="usersLoader" style="display: none;">
-              <td colspan="10" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-3 text-muted mb-0">Loading users...</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Spacer to prevent content from hiding behind fixed pagination -->
-        <div class="pagination-spacer-above-footer"></div>
-      </div>
-
-      <!-- ✅ Fixed Pagination Above Footer -->
-      <div
-        id="fixedPagination"
-        class="fixed-pagination-above-footer bg-white border-top shadow-sm"
-      >
-        <div class="container-fluid">
-          <div class="d-flex justify-content-between align-items-center py-2">
-            <!-- Left side: Page size selector -->
-            <div class="d-flex align-items-center">
-              <label for="pageSize" class="form-label mb-0 me-2 text-nowrap"
-                >Show</label
-              >
-              <select id="pageSize" class="form-select form-select-sm w-auto">
-                <option value="50" selected>50</option>
-                <option value="100">100</option>
-                <option value="150">150</option>
-                <option value="200">200</option>
-              </select>
-              <span class="ms-2 text-nowrap">entries per page</span>
+<body class="app">
+  <header class="app-header fixed-top">
+    <div class="app-header-inner">
+      <div class="container-fluid py-2">
+        <div class="app-header-content">
+          <div class="row justify-content-between align-items-center">
+            <div class="col-auto">
+              <a id="sidepanel-toggler" class="sidepanel-toggler d-inline-block d-xl-none" href="#">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" role="img">
+                  <title>Menu</title>
+                  <path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"
+                    d="M4 7h22M4 15h22M4 23h22"></path>
+                </svg>
+              </a>
             </div>
 
-            <!-- ✅ Right side: Entry count and pagination buttons stacked -->
-            <div class="d-flex flex-column align-items-end">
-              <div id="entryCount" class="text-muted small mb-1"></div>
-              <nav aria-label="User table pagination">
-                <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
-              </nav>
+            <div class="search-mobile-trigger d-sm-none col">
+              <i class="search-mobile-trigger-icon fa-solid fa-magnifying-glass"></i>
+            </div>
+
+            <div class="app-utilities col-auto">
+              <div class="app-utility-item app-user-dropdown dropdown">
+                <a class="dropdown-toggle" id="user-dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                  aria-expanded="false">
+                  <img src="assets/images/club-logo.jpg" alt="user profile" />
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="user-dropdown-toggle">
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" id="logout">Log Out</a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
+          <!--//row-->
         </div>
+        <!--//app-header-content-->
       </div>
-
-      <footer class="app-footer">
-        <div class="container text-center py-3">
-          <small class="copyright">
-            Designed with <span class="sr-only">love</span>
-            <i class="fas fa-heart" style="color: #fb866a"></i> by IIE Tech Club
-          </small>
-        </div>
-      </footer>
     </div>
 
-    <!-- Javascript -->
-    <script src="assets/plugins/popper.min.js"></script>
-    <script src="assets/plugins/bootstrap/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="assets/js/main.js"></script>
+    <div id="app-sidepanel" class="app-sidepanel">
+      <div id="sidepanel-drop" class="sidepanel-drop"></div>
+      <div class="sidepanel-inner d-flex flex-column">
+        <a href="#" id="sidepanel-close" class="sidepanel-close d-xl-none">&times;</a>
+        <div class="app-branding">
+          <a class="app-logo" href="dashboard.html">
+            <img class="logo-icon me-2" src="assets/images/club-logo.jpg" alt="logo"
+              style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
+            <span class="logo-text">QUIZ ADMIN</span>
+          </a>
+        </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        // Check if user is authenticated before loading content
+        <nav id="app-nav-main" class="app-nav app-nav-main flex-grow-1">
+          <ul class="app-menu list-unstyled accordion" id="menu-accordion">
+            <li class="nav-item">
+              <a class="nav-link active" href="dashboard.html">
+                <span class="nav-icon">
+                  <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-house-door" fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                      d="M7.646 1.146a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 .146.354v7a.5.5 0 0 1-.5.5H9.5a.5.5 0 0 1-.5-.5v-4H7v4a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5v-7a.5.5 0 0 1 .146-.354l6-6zM2.5 7.707V14H6v-4a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v4h3.5V7.707L8 2.207l-5.5 5.5z" />
+                  </svg>
+                </span>
+                <span class="nav-link-text">Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="allQuestions.html">
+                <span class="nav-icon">
+                  <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-question-circle" fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                      d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                    <path
+                      d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z" />
+                  </svg>
+                </span>
+                <span class="nav-link-text">Questions</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-wrapper">
+    <div class="px-5 py-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0">Users</h1>
+        <button id="bulkDeleteBtn" class="btn btn-danger" disabled onclick="deleteSelectedUsers()">
+          <i class="fas fa-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+        </button>
+      </div>
+
+      <table class="table table-striped mb-0" id="userTable">
+        <thead>
+          <tr>
+            <th scope="col">
+              <input type="checkbox" id="selectAll" class="form-check-input" style="cursor: pointer;"
+                onchange="toggleSelectAll(this)">
+            </th>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Score</th>
+            <th scope="col">Attempt #</th>
+            <th scope="col">Date/Time</th>
+            <th scope="col">Attempts</th>
+            <th scope="col">Status</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Loader Row -->
+          <tr id="usersLoader" style="display: none;">
+            <td colspan="10" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-3 text-muted mb-0">Loading users...</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Spacer to prevent content from hiding behind fixed pagination -->
+      <div class="pagination-spacer-above-footer"></div>
+    </div>
+
+    <!-- ✅ Fixed Pagination Above Footer -->
+    <div id="fixedPagination" class="fixed-pagination-above-footer bg-white border-top shadow-sm">
+      <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center py-2">
+          <!-- Left side: Page size selector -->
+          <div class="d-flex align-items-center">
+            <label for="pageSize" class="form-label mb-0 me-2 text-nowrap">Show</label>
+            <select id="pageSize" class="form-select form-select-sm w-auto">
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+              <option value="150">150</option>
+              <option value="200">200</option>
+            </select>
+            <span class="ms-2 text-nowrap">entries per page</span>
+          </div>
+
+          <!-- ✅ Right side: Entry count and pagination buttons stacked -->
+          <div class="d-flex flex-column align-items-end">
+            <div id="entryCount" class="text-muted small mb-1"></div>
+            <nav aria-label="User table pagination">
+              <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="app-footer">
+      <div class="container text-center py-3">
+        <small class="copyright">
+          Designed with <span class="sr-only">love</span>
+          <i class="fas fa-heart" style="color: #fb866a"></i> by IIE Tech Club
+        </small>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Javascript -->
+  <script src="assets/plugins/popper.min.js"></script>
+  <script src="assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="assets/js/main.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Check if user is authenticated before loading content
+      const sessionCheck = sessionManager.checkSession();
+      if (!sessionCheck.valid) {
+        console.log("Session invalid:", sessionCheck.reason);
+        sessionManager.redirectToLogin();
+        return;
+      }
+
+      const tableBody = document.querySelector("#userTable tbody");
+      const pageSizeSelect = document.getElementById("pageSize");
+      const entryCount = document.getElementById("entryCount");
+      const pagination = document.getElementById("pagination");
+
+      let users = [];
+      let currentPage = 1;
+      let pageSize = parseInt(pageSizeSelect.value);
+
+      // ✅ Format date to dd/mm/yyyy
+      function formatDate(dateString) {
+        if (!dateString) return "N/A";
+
+        try {
+          const date = new Date(dateString);
+
+          // Check if date is valid
+          if (isNaN(date.getTime())) return "N/A";
+
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+          const year = date.getFullYear();
+
+          return `${day}/${month}/${year}`;
+        } catch (error) {
+          console.error("Error formatting date:", error);
+          return "N/A";
+        }
+      }
+
+      // Update countdown timers
+      let countdownInterval = null;
+
+      function updateCountdowns() {
+        // Clear existing interval
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+        }
+
+        // Update every second
+        countdownInterval = setInterval(() => {
+          const countdownElements = document.querySelectorAll('.countdown');
+          const now = new Date().getTime();
+          let hasActiveCountdowns = false;
+
+          countdownElements.forEach(element => {
+            const resetTime = parseInt(element.dataset.reset);
+            const timeRemaining = resetTime - now;
+
+            if (timeRemaining <= 0) {
+              // Time's up - show ready status
+              element.className = 'badge bg-success';
+              element.innerHTML = '<i class="fas fa-check"></i> Ready';
+            } else {
+              hasActiveCountdowns = true;
+              const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+              const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+              const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+              element.textContent = `${hours}h ${minutes}m ${seconds}s`;
+            }
+          });
+
+          // If no active countdowns, clear interval
+          if (!hasActiveCountdowns && countdownElements.length > 0) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+          }
+        }, 1000);
+      }
+
+      // ✅ API URL Configuration - Auto-detect environment
+      const API_URL = (() => {
+        const hostname = window.location.hostname;
+        const port = window.location.port;
+
+        // If we're on localhost/127.0.0.1
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          // If already on port 5001, use relative URLs (served by backend)
+          if (port === '5001') {
+            return '';
+          }
+          // Otherwise (different port or file://), use full URL
+          return 'http://localhost:5001';
+        }
+
+        // Production (Vercel) - use relative URLs
+        return '';
+      })();
+
+      async function fetchUsers() {
+        // Show loader row
+        const loader = document.getElementById("usersLoader");
+        if (loader) loader.style.display = "table-row";
+
+        try {
+          // Check session validity
+          const sessionCheck = sessionManager.checkSession();
+          if (!sessionCheck.valid) {
+            sessionManager.logout();
+            return;
+          }
+
+          const res = await fetch(`${API_URL}/api/users`, {
+            headers: {
+              "Content-Type": "application/json",
+              "X-Session-ID": sessionCheck.sessionData?.sessionId || "",
+            },
+          });
+
+          // Handle session expired responses from server
+          if (res.status === 401 || res.status === 403) {
+            Swal.fire({
+              icon: "warning",
+              title: "Session Expired",
+              text: "Your session has expired. Please login again.",
+              confirmButtonText: "OK",
+            }).then(() => {
+              sessionManager.logout();
+            });
+            return;
+          }
+
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+
+          users = await res.json();
+
+          // Sort users: oldest first (latest last)
+          users.sort((a, b) => {
+            const dateA = new Date(a.joinedOn || a.createdAt || 0);
+            const dateB = new Date(b.joinedOn || b.createdAt || 0);
+            return dateA - dateB; // Ascending order (oldest first)
+          });
+
+          renderTable();
+          renderPagination();
+          updateEntryCount();
+        } catch (err) {
+          console.error("Error fetching users:", err);
+          console.error("Error name:", err.name);
+          console.error("Error message:", err.message);
+          console.error("API_URL:", API_URL);
+          console.error("Full URL:", `${API_URL}/api/users`);
+
+          // Hide loader on error
+          const loader = document.getElementById("usersLoader");
+          if (loader) loader.style.display = "none";
+
+          // Show detailed error message
+          let errorMessage = "Failed to load users. ";
+          if (err.message.includes("Failed to fetch") || err.name === "TypeError") {
+            errorMessage = "Unable to connect to server. Please check your connection and try again.";
+          } else if (err.message.includes("HTTP error")) {
+            errorMessage = `Server error: ${err.message}`;
+          } else {
+            errorMessage = err.message || "Unknown error occurred";
+          }
+
+          Swal.fire({
+            icon: "error",
+            title: "Connection Error",
+            text: errorMessage,
+            confirmButtonText: "OK",
+          });
+
+          tableBody.innerHTML =
+            '<tr><td colspan="10" class="text-danger text-center">Failed to load users. Check console for details.</td></tr>';
+        } finally {
+          // Hide loader row
+          const loader = document.getElementById("usersLoader");
+          if (loader) loader.style.display = "none";
+        }
+      }
+
+      function renderTable() {
+        // Update last activity when rendering table
+        sessionManager.updateLastActivity();
+
+        tableBody.innerHTML = "";
+        if (users.length === 0) {
+          tableBody.innerHTML =
+            '<tr><td colspan="10" class="text-center text-muted">No records found</td></tr>';
+          return;
+        }
+
+        const start = (currentPage - 1) * pageSize;
+        const paginatedUsers = users.slice(start, start + pageSize);
+        const now = new Date();
+
+        paginatedUsers.forEach((user, index) => {
+          // Format date/time
+          const dateObj = user.joinedOn ? new Date(user.joinedOn) : (user.createdAt ? new Date(user.createdAt) : new Date());
+          const dateStr = formatDate(dateObj);
+          const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+          const dateTimeDisplay = `${dateStr}<br><small class="text-muted">${timeStr}</small>`;
+
+          // Score display
+          const scoreDisplay = user.score !== null && user.score !== undefined
+            ? `<span class="badge bg-info">${user.score}/${user.total || 'N/A'}</span>`
+            : '<span class="text-muted">-</span>';
+
+          // Attempt Number display
+          const attemptNumberDisplay = user.attemptNumber
+            ? `<span class="badge bg-secondary">#${user.attemptNumber}</span>`
+            : '<span class="text-muted">-</span>';
+
+          // Calculate attempt status
+          const dailyAttempts = user.dailyAttempts || 0;
+          const lastAttemptDate = user.lastAttemptDate ? new Date(user.lastAttemptDate) : null;
+
+          let attemptsDisplay = `${dailyAttempts}/3`;
+          let statusDisplay = '';
+
+          if (lastAttemptDate) {
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const lastAttemptDay = new Date(
+              lastAttemptDate.getFullYear(),
+              lastAttemptDate.getMonth(),
+              lastAttemptDate.getDate()
+            );
+
+            if (lastAttemptDay.getTime() === today.getTime()) {
+              // Same day
+              if (dailyAttempts >= 3) {
+                // Limit reached - show countdown
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const timeRemaining = tomorrow.getTime() - now.getTime();
+
+                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+                statusDisplay = `<span class="badge bg-danger countdown" data-reset="${tomorrow.getTime()}">${hours}h ${minutes}m ${seconds}s</span>`;
+              } else {
+                statusDisplay = '<span class="badge bg-success">Available</span>';
+              }
+            } else {
+              // Different day - reset available
+              attemptsDisplay = '0/3';
+              statusDisplay = '<span class="badge bg-success"><i class="fas fa-check"></i> Ready</span>';
+            }
+          } else {
+            // No attempts yet
+            statusDisplay = '<span class="badge bg-success"><i class="fas fa-check"></i> Ready</span>';
+          }
+
+
+          tableBody.innerHTML += `
+              <tr>
+                <td>
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input user-checkbox" 
+                    style="cursor: pointer;"
+                    data-user-id="${user._id}"
+                    onchange="updateBulkDeleteButton()">
+                </td>
+                <th scope="row">${start + index + 1}</th>
+                <td>${user.name || "N/A"}</td>
+                <td>${user.email || "N/A"}</td>
+                <td>${scoreDisplay}</td>
+                <td>${attemptNumberDisplay}</td>
+                <td>${dateTimeDisplay}</td>
+                <td>${attemptsDisplay}</td>
+                <td>${statusDisplay}</td>
+                <td>
+                  <button class="btn btn-sm btn-danger" onclick="deleteUser('${user._id
+            }')">Delete</button>
+                </td>
+              </tr>
+            `;
+        });
+
+        // Start countdown updates
+        updateCountdowns();
+
+        // Reset select all checkbox
+        document.getElementById('selectAll').checked = false;
+        updateBulkDeleteButton();
+      }
+
+      function renderPagination() {
+        pagination.innerHTML = "";
+        const pageCount = Math.ceil(users.length / pageSize) || 1;
+
+        // Previous button
+        const prevLi = document.createElement("li");
+        prevLi.className = `page-item ${currentPage === 1 ? "disabled" : ""}`;
+        prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous">&laquo;</a>`;
+        if (currentPage > 1) {
+          prevLi.addEventListener("click", (e) => {
+            e.preventDefault();
+            sessionManager.updateLastActivity();
+            currentPage--;
+            renderTable();
+            renderPagination();
+            updateEntryCount();
+          });
+        }
+        pagination.appendChild(prevLi);
+
+        // Page numbers
+        for (let i = 1; i <= pageCount; i++) {
+          const li = document.createElement("li");
+          li.className = `page-item ${i === currentPage ? "active" : ""}`;
+          li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+          li.addEventListener("click", (e) => {
+            e.preventDefault();
+            sessionManager.updateLastActivity();
+            currentPage = i;
+            renderTable();
+            renderPagination();
+            updateEntryCount();
+          });
+          pagination.appendChild(li);
+        }
+
+        // Next button
+        const nextLi = document.createElement("li");
+        nextLi.className = `page-item ${currentPage === pageCount ? "disabled" : ""
+          }`;
+        nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next">&raquo;</a>`;
+        if (currentPage < pageCount) {
+          nextLi.addEventListener("click", (e) => {
+            e.preventDefault();
+            sessionManager.updateLastActivity();
+            currentPage++;
+            renderTable();
+            renderPagination();
+            updateEntryCount();
+          });
+        }
+        pagination.appendChild(nextLi);
+      }
+
+      function updateEntryCount() {
+        if (users.length === 0) {
+          entryCount.textContent = "Showing 0 entries";
+          return;
+        }
+
+        const start = (currentPage - 1) * pageSize + 1;
+        const end = Math.min(currentPage * pageSize, users.length);
+        entryCount.textContent = `Showing ${start} to ${end} of ${users.length} entries`;
+      }
+
+      pageSizeSelect.addEventListener("change", () => {
+        sessionManager.updateLastActivity();
+        pageSize = parseInt(pageSizeSelect.value);
+        currentPage = 1;
+        renderTable();
+        renderPagination();
+        updateEntryCount();
+      });
+
+      window.deleteUser = async function (id) {
+        // Check session before deletion
         const sessionCheck = sessionManager.checkSession();
         if (!sessionCheck.valid) {
-          console.log("Session invalid:", sessionCheck.reason);
           sessionManager.redirectToLogin();
           return;
         }
 
-        const tableBody = document.querySelector("#userTable tbody");
-        const pageSizeSelect = document.getElementById("pageSize");
-        const entryCount = document.getElementById("entryCount");
-        const pagination = document.getElementById("pagination");
+        const result = await Swal.fire({
+          title: "Are you sure?",
+          text: "This user will be permanently deleted!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Yes, delete it!",
+          cancelButtonText: "Cancel",
+        });
 
-        let users = [];
-        let currentPage = 1;
-        let pageSize = parseInt(pageSizeSelect.value);
-
-        // ✅ Format date to dd/mm/yyyy
-        function formatDate(dateString) {
-          if (!dateString) return "N/A";
-
+        if (result.isConfirmed) {
           try {
-            const date = new Date(dateString);
+            sessionManager.updateLastActivity();
 
-            // Check if date is valid
-            if (isNaN(date.getTime())) return "N/A";
-
-            const day = String(date.getDate()).padStart(2, "0");
-            const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-            const year = date.getFullYear();
-
-            return `${day}/${month}/${year}`;
-          } catch (error) {
-            console.error("Error formatting date:", error);
-            return "N/A";
-          }
-        }
-
-        // Update countdown timers
-        let countdownInterval = null;
-        
-        function updateCountdowns() {
-          // Clear existing interval
-          if (countdownInterval) {
-            clearInterval(countdownInterval);
-          }
-          
-          // Update every second
-          countdownInterval = setInterval(() => {
-            const countdownElements = document.querySelectorAll('.countdown');
-            const now = new Date().getTime();
-            let hasActiveCountdowns = false;
-            
-            countdownElements.forEach(element => {
-              const resetTime = parseInt(element.dataset.reset);
-              const timeRemaining = resetTime - now;
-              
-              if (timeRemaining <= 0) {
-                // Time's up - show ready status
-                element.className = 'badge bg-success';
-                element.innerHTML = '<i class="fas fa-check"></i> Ready';
-              } else {
-                hasActiveCountdowns = true;
-                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-                
-                element.textContent = `${hours}h ${minutes}m ${seconds}s`;
-              }
-            });
-            
-            // If no active countdowns, clear interval
-            if (!hasActiveCountdowns && countdownElements.length > 0) {
-              clearInterval(countdownInterval);
-              countdownInterval = null;
-            }
-          }, 1000);
-        }
-
-        // ✅ API URL Configuration - Auto-detect environment
-        const API_URL = (() => {
-          const hostname = window.location.hostname;
-          const port = window.location.port;
-          
-          // If we're on localhost/127.0.0.1
-          if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            // If already on port 5001, use relative URLs (served by backend)
-            if (port === '5001') {
-              return '';
-            }
-            // Otherwise (different port or file://), use full URL
-            return 'http://localhost:5001';
-          }
-          
-          // Production (Vercel) - use relative URLs
-          return '';
-        })();
-        
-        async function fetchUsers() {
-          // Show loader row
-          const loader = document.getElementById("usersLoader");
-          if (loader) loader.style.display = "table-row";
-          
-          try {
-            // Check session validity
-            const sessionCheck = sessionManager.checkSession();
-            if (!sessionCheck.valid) {
-              sessionManager.logout();
-              return;
-            }
-
-            const res = await fetch(`${API_URL}/api/users`, {
+            const res = await fetch(`${API_URL}/api/users/${id}`, {
+              method: "DELETE",
               headers: {
                 "Content-Type": "application/json",
+                // Add session ID to headers if needed for backend validation
                 "X-Session-ID": sessionCheck.sessionData?.sessionId || "",
               },
             });
@@ -424,502 +657,224 @@
               return;
             }
 
-            if (!res.ok) {
-              throw new Error(`HTTP error! status: ${res.status}`);
+            const data = await res.json();
+
+            if (res.ok) {
+              users = users.filter((u) => u._id !== id);
+
+              // Adjust pagination if current page becomes empty
+              const pageCount = Math.ceil(users.length / pageSize);
+              if (currentPage > pageCount && pageCount > 0) {
+                currentPage = pageCount;
+              }
+
+              renderTable();
+              renderPagination();
+              updateEntryCount();
+
+              Swal.fire(
+                "Deleted!",
+                data.message || "User deleted successfully.",
+                "success"
+              );
+            } else {
+              Swal.fire(
+                "Error",
+                data.message || "Failed to delete user.",
+                "error"
+              );
             }
-
-            users = await res.json();
-
-            // Sort users: oldest first (latest last)
-            users.sort((a, b) => {
-              const dateA = new Date(a.joinedOn || a.createdAt || 0);
-              const dateB = new Date(b.joinedOn || b.createdAt || 0);
-              return dateA - dateB; // Ascending order (oldest first)
-            });
-
-            renderTable();
-            renderPagination();
-            updateEntryCount();
           } catch (err) {
-            console.error("Error fetching users:", err);
-            console.error("Error name:", err.name);
-            console.error("Error message:", err.message);
-            console.error("API_URL:", API_URL);
-            console.error("Full URL:", `${API_URL}/api/users`);
-            
-            // Hide loader on error
-            const loader = document.getElementById("usersLoader");
-            if (loader) loader.style.display = "none";
-
-            // Show detailed error message
-            let errorMessage = "Failed to load users. ";
-            if (err.message.includes("Failed to fetch") || err.name === "TypeError") {
-              errorMessage = "Unable to connect to server. Please check your connection and try again.";
-            } else if (err.message.includes("HTTP error")) {
-              errorMessage = `Server error: ${err.message}`;
-            } else {
-              errorMessage = err.message || "Unknown error occurred";
-            }
-
-            Swal.fire({
-              icon: "error",
-              title: "Connection Error",
-              text: errorMessage,
-              confirmButtonText: "OK",
-            });
-
-            tableBody.innerHTML =
-              '<tr><td colspan="10" class="text-danger text-center">Failed to load users. Check console for details.</td></tr>';
-          } finally {
-            // Hide loader row
-            const loader = document.getElementById("usersLoader");
-            if (loader) loader.style.display = "none";
+            console.error("Delete failed", err);
+            Swal.fire(
+              "Error",
+              "Server error occurred while deleting user.",
+              "error"
+            );
           }
         }
+      };
 
-        function renderTable() {
-          // Update last activity when rendering table
-          sessionManager.updateLastActivity();
-
-          tableBody.innerHTML = "";
-          if (users.length === 0) {
-            tableBody.innerHTML =
-              '<tr><td colspan="10" class="text-center text-muted">No records found</td></tr>';
-            return;
-          }
-
-          const start = (currentPage - 1) * pageSize;
-          const paginatedUsers = users.slice(start, start + pageSize);
-          const now = new Date();
-
-          paginatedUsers.forEach((user, index) => {
-            // Format date/time
-            const dateObj = user.joinedOn ? new Date(user.joinedOn) : (user.createdAt ? new Date(user.createdAt) : new Date());
-            const dateStr = formatDate(dateObj);
-            const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            const dateTimeDisplay = `${dateStr}<br><small class="text-muted">${timeStr}</small>`;
-
-            // Score display
-            const scoreDisplay = user.score !== null && user.score !== undefined 
-              ? `<span class="badge bg-info">${user.score}/${user.total || 'N/A'}</span>`
-              : '<span class="text-muted">-</span>';
-
-            // Attempt Number display
-            const attemptNumberDisplay = user.attemptNumber 
-              ? `<span class="badge bg-secondary">#${user.attemptNumber}</span>`
-              : '<span class="text-muted">-</span>';
-
-            // Calculate attempt status
-            const dailyAttempts = user.dailyAttempts || 0;
-            const lastAttemptDate = user.lastAttemptDate ? new Date(user.lastAttemptDate) : null;
-            
-            let attemptsDisplay = `${dailyAttempts}/3`;
-            let statusDisplay = '';
-            
-            if (lastAttemptDate) {
-              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-              const lastAttemptDay = new Date(
-                lastAttemptDate.getFullYear(),
-                lastAttemptDate.getMonth(),
-                lastAttemptDate.getDate()
-              );
-              
-              if (lastAttemptDay.getTime() === today.getTime()) {
-                // Same day
-                if (dailyAttempts >= 3) {
-                  // Limit reached - show countdown
-                  const tomorrow = new Date(today);
-                  tomorrow.setDate(tomorrow.getDate() + 1);
-                  const timeRemaining = tomorrow.getTime() - now.getTime();
-                  
-                  const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-                  const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-                  const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-                  
-                  statusDisplay = `<span class="badge bg-danger countdown" data-reset="${tomorrow.getTime()}">${hours}h ${minutes}m ${seconds}s</span>`;
-                } else {
-                  statusDisplay = '<span class="badge bg-success">Available</span>';
-                }
-              } else {
-                // Different day - reset available
-                attemptsDisplay = '0/3';
-                statusDisplay = '<span class="badge bg-success"><i class="fas fa-check"></i> Ready</span>';
-              }
-            } else {
-              // No attempts yet
-              statusDisplay = '<span class="badge bg-success"><i class="fas fa-check"></i> Ready</span>';
-            }
-
-            tableBody.innerHTML += `
-              <tr>
-                <td>
-                  <input 
-                    type="checkbox" 
-                    class="form-check-input user-checkbox" 
-                    style="cursor: pointer;"
-                    data-user-id="${user._id}"
-                    onchange="updateBulkDeleteButton()">
-                </td>
-                <th scope="row">${start + index + 1}</th>
-                <td>${user.name || "N/A"}</td>
-                <td>${user.email || "N/A"}</td>
-                <td>${scoreDisplay}</td>
-                <td>${attemptNumberDisplay}</td>
-                <td>${dateTimeDisplay}</td>
-                <td><span class="badge bg-primary">${attemptsDisplay}</span></td>
-                <td>${statusDisplay}</td>
-                <td>
-                  <button class="btn btn-sm btn-danger" onclick="deleteUser('${
-                    user._id
-                  }')">Delete</button>
-                </td>
-              </tr>
-            `;
-          });
-          
-          // Start countdown updates
-          updateCountdowns();
-          
-          // Reset select all checkbox
-          document.getElementById('selectAll').checked = false;
-          updateBulkDeleteButton();
-        }
-
-        function renderPagination() {
-          pagination.innerHTML = "";
-          const pageCount = Math.ceil(users.length / pageSize) || 1;
-
-          // Previous button
-          const prevLi = document.createElement("li");
-          prevLi.className = `page-item ${currentPage === 1 ? "disabled" : ""}`;
-          prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous">&laquo;</a>`;
-          if (currentPage > 1) {
-            prevLi.addEventListener("click", (e) => {
-              e.preventDefault();
-              sessionManager.updateLastActivity();
-              currentPage--;
-              renderTable();
-              renderPagination();
-              updateEntryCount();
-            });
-          }
-          pagination.appendChild(prevLi);
-
-          // Page numbers
-          for (let i = 1; i <= pageCount; i++) {
-            const li = document.createElement("li");
-            li.className = `page-item ${i === currentPage ? "active" : ""}`;
-            li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-            li.addEventListener("click", (e) => {
-              e.preventDefault();
-              sessionManager.updateLastActivity();
-              currentPage = i;
-              renderTable();
-              renderPagination();
-              updateEntryCount();
-            });
-            pagination.appendChild(li);
-          }
-
-          // Next button
-          const nextLi = document.createElement("li");
-          nextLi.className = `page-item ${
-            currentPage === pageCount ? "disabled" : ""
-          }`;
-          nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next">&raquo;</a>`;
-          if (currentPage < pageCount) {
-            nextLi.addEventListener("click", (e) => {
-              e.preventDefault();
-              sessionManager.updateLastActivity();
-              currentPage++;
-              renderTable();
-              renderPagination();
-              updateEntryCount();
-            });
-          }
-          pagination.appendChild(nextLi);
-        }
-
-        function updateEntryCount() {
-          if (users.length === 0) {
-            entryCount.textContent = "Showing 0 entries";
-            return;
-          }
-
-          const start = (currentPage - 1) * pageSize + 1;
-          const end = Math.min(currentPage * pageSize, users.length);
-          entryCount.textContent = `Showing ${start} to ${end} of ${users.length} entries`;
-        }
-
-        pageSizeSelect.addEventListener("change", () => {
-          sessionManager.updateLastActivity();
-          pageSize = parseInt(pageSizeSelect.value);
-          currentPage = 1;
-          renderTable();
-          renderPagination();
-          updateEntryCount();
+      // Toggle select all checkboxes
+      window.toggleSelectAll = function (checkbox) {
+        const checkboxes = document.querySelectorAll('.user-checkbox');
+        checkboxes.forEach(cb => {
+          cb.checked = checkbox.checked;
         });
+        updateBulkDeleteButton();
+      };
 
-        window.deleteUser = async function (id) {
-          // Check session before deletion
-          const sessionCheck = sessionManager.checkSession();
-          if (!sessionCheck.valid) {
-            sessionManager.redirectToLogin();
-            return;
-          }
+      // Update bulk delete button state and count
+      window.updateBulkDeleteButton = function () {
+        const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const selectedCount = document.getElementById('selectedCount');
+        const selectAllCheckbox = document.getElementById('selectAll');
 
-          const result = await Swal.fire({
-            title: "Are you sure?",
-            text: "This user will be permanently deleted!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, delete it!",
-            cancelButtonText: "Cancel",
-          });
-
-          if (result.isConfirmed) {
-            try {
-              sessionManager.updateLastActivity();
-
-              const res = await fetch(`${API_URL}/api/users/${id}`, {
-                method: "DELETE",
-                headers: {
-                  "Content-Type": "application/json",
-                  // Add session ID to headers if needed for backend validation
-                  "X-Session-ID": sessionCheck.sessionData?.sessionId || "",
-                },
-              });
-
-              // Handle session expired responses from server
-              if (res.status === 401 || res.status === 403) {
-                Swal.fire({
-                  icon: "warning",
-                  title: "Session Expired",
-                  text: "Your session has expired. Please login again.",
-                  confirmButtonText: "OK",
-                }).then(() => {
-                  sessionManager.logout();
-                });
-                return;
-              }
-
-              const data = await res.json();
-
-              if (res.ok) {
-                users = users.filter((u) => u._id !== id);
-
-                // Adjust pagination if current page becomes empty
-                const pageCount = Math.ceil(users.length / pageSize);
-                if (currentPage > pageCount && pageCount > 0) {
-                  currentPage = pageCount;
-                }
-
-                renderTable();
-                renderPagination();
-                updateEntryCount();
-                
-                Swal.fire(
-                  "Deleted!",
-                  data.message || "User deleted successfully.",
-                  "success"
-                );
-              } else {
-                Swal.fire(
-                  "Error",
-                  data.message || "Failed to delete user.",
-                  "error"
-                );
-              }
-            } catch (err) {
-              console.error("Delete failed", err);
-              Swal.fire(
-                "Error",
-                "Server error occurred while deleting user.",
-                "error"
-              );
-            }
-          }
-        };
-
-        // Toggle select all checkboxes
-        window.toggleSelectAll = function(checkbox) {
-          const checkboxes = document.querySelectorAll('.user-checkbox');
-          checkboxes.forEach(cb => {
-            cb.checked = checkbox.checked;
-          });
-          updateBulkDeleteButton();
-        };
-
-        // Update bulk delete button state and count
-        window.updateBulkDeleteButton = function() {
-          const checkboxes = document.querySelectorAll('.user-checkbox:checked');
-          const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-          const selectedCount = document.getElementById('selectedCount');
-          const selectAllCheckbox = document.getElementById('selectAll');
-          
-          if (checkboxes.length > 0) {
-            bulkDeleteBtn.disabled = false;
-            selectedCount.textContent = checkboxes.length;
-          } else {
-            bulkDeleteBtn.disabled = true;
-            selectedCount.textContent = '0';
-            selectAllCheckbox.checked = false;
-          }
-        };
-
-        // Delete selected users
-        window.deleteSelectedUsers = async function() {
-          const checkboxes = document.querySelectorAll('.user-checkbox:checked');
-          
-          if (checkboxes.length === 0) {
-            return;
-          }
-
-          const userIds = Array.from(checkboxes).map(cb => cb.dataset.userId);
-          
-          const result = await Swal.fire({
-            title: "Are you sure?",
-            html: `You are about to delete <strong>${userIds.length}</strong> user(s). This action cannot be undone!`,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
-            confirmButtonText: "Yes, delete them!",
-            cancelButtonText: "Cancel",
-          });
-
-          if (result.isConfirmed) {
-            try {
-              sessionManager.updateLastActivity();
-              
-              let successCount = 0;
-              let errorCount = 0;
-              
-              // Delete users one by one
-              for (const userId of userIds) {
-                try {
-                  const res = await fetch(`${API_URL}/api/users/${userId}`, {
-                    method: "DELETE",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  });
-
-                  if (res.status === 401 || res.status === 403) {
-                    Swal.fire({
-                      icon: "warning",
-                      title: "Session Expired",
-                      text: "Your session has expired. Please login again.",
-                      confirmButtonText: "OK",
-                    }).then(() => {
-                      sessionManager.logout();
-                    });
-                    return;
-                  }
-
-                  if (res.ok) {
-                    successCount++;
-                    users = users.filter((u) => u._id !== userId);
-                  } else {
-                    errorCount++;
-                  }
-                } catch (err) {
-                  console.error("Delete failed for user:", userId, err);
-                  errorCount++;
-                }
-              }
-
-              // Show result
-              if (successCount > 0) {
-                // Adjust pagination if current page becomes empty
-                const pageCount = Math.ceil(users.length / pageSize);
-                if (currentPage > pageCount && pageCount > 0) {
-                  currentPage = pageCount;
-                }
-
-                renderTable();
-                renderPagination();
-                updateEntryCount();
-                
-                Swal.fire(
-                  "Deleted!",
-                  `Successfully deleted ${successCount} user(s).${errorCount > 0 ? ` Failed to delete ${errorCount} user(s).` : ''}`,
-                  successCount === userIds.length ? "success" : "warning"
-                );
-              } else {
-                Swal.fire(
-                  "Error",
-                  "Failed to delete selected users.",
-                  "error"
-                );
-              }
-            } catch (err) {
-              console.error("Bulk delete failed", err);
-              Swal.fire(
-                "Error",
-                "Server error occurred while deleting users.",
-                "error"
-              );
-            }
-          }
-        };
-
-        // Display user info from session
-        const userInfo = sessionManager.getUserInfo();
-        // Initial data fetch
-        fetchUsers();
-        
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-          if (countdownInterval) {
-            clearInterval(countdownInterval);
-          }
-        });
-      });
-
-      // Logout functionality
-      document.addEventListener("DOMContentLoaded", function () {
-        const logoutBtn = document.getElementById("logout");
-
-        if (logoutBtn) {
-          logoutBtn.addEventListener("click", function (e) {
-            e.preventDefault();
-            handleLogout();
-          });
+        if (checkboxes.length > 0) {
+          bulkDeleteBtn.disabled = false;
+          selectedCount.textContent = checkboxes.length;
+        } else {
+          bulkDeleteBtn.disabled = true;
+          selectedCount.textContent = '0';
+          selectAllCheckbox.checked = false;
         }
-      });
+      };
 
-      function handleLogout() {
-        Swal.fire({
-          title: "Confirm Logout",
-          text: "Are you sure you want to logout?",
+      // Delete selected users
+      window.deleteSelectedUsers = async function () {
+        const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+
+        if (checkboxes.length === 0) {
+          return;
+        }
+
+        const userIds = Array.from(checkboxes).map(cb => cb.dataset.userId);
+
+        const result = await Swal.fire({
+          title: "Are you sure?",
+          html: `You are about to delete <strong>${userIds.length}</strong> user(s). This action cannot be undone!`,
           icon: "warning",
           showCancelButton: true,
           confirmButtonColor: "#d33",
           cancelButtonColor: "#3085d6",
-          confirmButtonText: "Yes, logout",
+          confirmButtonText: "Yes, delete them!",
           cancelButtonText: "Cancel",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Show loading state
-            Swal.fire({
-              title: "Logging out...",
-              text: "Please wait",
-              allowOutsideClick: false,
-              allowEscapeKey: false,
-              showConfirmButton: false,
-              didOpen: () => {
-                Swal.showLoading();
-              },
-            });
+        });
 
-            // Clear session and redirect after short delay
-            setTimeout(() => {
-              sessionManager.logout();
-            }, 1000);
+        if (result.isConfirmed) {
+          try {
+            sessionManager.updateLastActivity();
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            // Delete users one by one
+            for (const userId of userIds) {
+              try {
+                const res = await fetch(`${API_URL}/api/users/${userId}`, {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                  Swal.fire({
+                    icon: "warning",
+                    title: "Session Expired",
+                    text: "Your session has expired. Please login again.",
+                    confirmButtonText: "OK",
+                  }).then(() => {
+                    sessionManager.logout();
+                  });
+                  return;
+                }
+
+                if (res.ok) {
+                  successCount++;
+                  users = users.filter((u) => u._id !== userId);
+                } else {
+                  errorCount++;
+                }
+              } catch (err) {
+                console.error("Delete failed for user:", userId, err);
+                errorCount++;
+              }
+            }
+
+            // Show result
+            if (successCount > 0) {
+              // Adjust pagination if current page becomes empty
+              const pageCount = Math.ceil(users.length / pageSize);
+              if (currentPage > pageCount && pageCount > 0) {
+                currentPage = pageCount;
+              }
+
+              renderTable();
+              renderPagination();
+              updateEntryCount();
+
+              Swal.fire(
+                "Deleted!",
+                `Successfully deleted ${successCount} user(s).${errorCount > 0 ? ` Failed to delete ${errorCount} user(s).` : ''}`,
+                successCount === userIds.length ? "success" : "warning"
+              );
+            } else {
+              Swal.fire(
+                "Error",
+                "Failed to delete selected users.",
+                "error"
+              );
+            }
+          } catch (err) {
+            console.error("Bulk delete failed", err);
+            Swal.fire(
+              "Error",
+              "Server error occurred while deleting users.",
+              "error"
+            );
           }
+        }
+      };
+
+      // Display user info from session
+      const userInfo = sessionManager.getUserInfo();
+      // Initial data fetch
+      fetchUsers();
+
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', () => {
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+        }
+      });
+    });
+
+    // Logout functionality
+    document.addEventListener("DOMContentLoaded", function () {
+      const logoutBtn = document.getElementById("logout");
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          handleLogout();
         });
       }
-    </script>
-  </body>
+    });
+
+    function handleLogout() {
+      Swal.fire({
+        title: "Confirm Logout",
+        text: "Are you sure you want to logout?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, logout",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Show loading state
+          Swal.fire({
+            title: "Logging out...",
+            text: "Please wait",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+
+          // Clear session and redirect after short delay
+          setTimeout(() => {
+            sessionManager.logout();
+          }, 1000);
+        }
+      });
+    }
+  </script>
+</body>
+
 </html>

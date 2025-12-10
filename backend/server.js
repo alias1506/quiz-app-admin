@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: __dirname + "/.env" });
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -54,4 +54,6 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Admin Server running on port ${PORT}`);
   console.log(`📁 Serving frontend from: ${path.join(__dirname, '../frontend')}`);
+  console.log(`\n  ➜  Local:   \x1b[36mhttp://localhost:${PORT}/\x1b[0m`);
+  console.log(`  ➜  Press Ctrl+C to stop\n`);
 });

@@ -5,10 +5,14 @@
     "private": true,
     "scripts": {
         "start": "node backend/server.js",
+        "dev": "nodemon backend/server.js",
         "install-backend": "npm install --prefix backend",
         "render-build": "npm run install-backend"
     },
     "engines": {
         "node": ">=18.0.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.10"
     }
 }
