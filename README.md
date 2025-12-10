@@ -8,8 +8,8 @@ Admin panel for managing quiz questions, sets, and users with AI-powered questio
 - **Quiz Set Management** - Organize questions into sets
 - **AI Question Generation** - Generate questions using Groq AI
 - **User Analytics** - View user attempts and scores
-- **Bulk Operations** - Import/export questions
-- **Real-time Updates** - Live data synchronization
+- **Bulk Operations** - Multi-delete questions and sets
+- **Randomization** - Questions and options shuffle on every quiz attempt
 
 ---
 
